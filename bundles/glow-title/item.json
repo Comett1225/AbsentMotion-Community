@@ -1,0 +1,27 @@
+{
+ "kind": "bundle",
+ "name": "glow-title",
+ "title": "Glow title",
+ "description": "A big title that pops in with an orange glow. Tap the text to write your own.",
+ "tags": [
+  "Text",
+  "Intro",
+  "Glow"
+ ],
+ "creator": "AbsentMotion",
+ "madeWith": "5.1.0",
+ "width": 1080,
+ "height": 1080,
+ "fps": 30,
+ "lengthMs": 2999,
+ "thumbnailMs": 1499,
+ "effects": [
+  "absent.glow"
+ ],
+ "licence": "CC BY 4.0",
+ "added": "2026-11-13",
+ "file": "bundles/glow-title/glow-title.absproj",
+ "bytes": 11256,
+ "sha256": "7cacddd07e2b8f49fead97a5c08f1195fde5621b7d58c8c24750423a36691b35",
+ "thumbnail": "bundles/glow-title/thumb.webp"
+}

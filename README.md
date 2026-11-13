@@ -1,47 +1,60 @@
 # AbsentMotion Community
 
-Edits, presets and templates made with [AbsentMotion](https://github.com/Comett1225/AbsentMotion) and shared by the
-community. Each item is a **Community bundle**: an AbsentMotion project file (`.absproj`) that also carries a title, a
-thumbnail taken from the project itself, a description, tags and the creator's name.
+Things people made with [AbsentMotion](https://github.com/Comett1225/AbsentMotion): project bundles and layer presets, with custom tools planned later.
 
-## Using an item
+## Using items
 
-1. Open the item's folder in `items/`.
-2. Download the `.absproj` file.
-3. Open it in AbsentMotion 5.1 or later (on a phone: Import on the Home screen; on a computer: drag it onto the window).
+In AbsentMotion 5.2 or later, open **Home > Community**, tap an item, and tap **Add**.
+
+You can also download an item file from GitHub and import it yourself:
+
+- On a phone, open the downloaded file with AbsentMotion.
+- On a computer, drag the file onto the AbsentMotion window.
 
 ## Sharing your own
 
-Only the maintainer adds items to this repository. To share something:
+Only the maintainer adds items to this repository.
 
-1. In AbsentMotion, open your project, go to **Export**, open the arrow next to **Project Bundle** and pick
-   **Community bundle**.
-2. Fill in the title, pick the thumbnail moment, and add a description, tags and your name.
-3. Send the `.absproj` file to the maintainer (Discord or the feedback form linked in the app's About page).
+- For a project bundle, open your project in AbsentMotion, go to **Export**, tap the arrow next to **Project Bundle**, and choose **Community bundle**.
+- Sharing your own layer presets from the app is coming in a later update. Until then, only the maintainer adds presets.
+- Send your file on [Discord](https://discord.gg/xXEHj8Sx8X) or through the report form linked in the app's About screen.
 
-Rules:
+## Rules
 
-- The file must be **20 MB or smaller**, media and fonts included.
-- It must be a **Community bundle** (made with the Community bundle option, so it has its thumbnail and details).
-- You made it, or you have the right to share everything in it.
-- Items are shared under the terms in [LICENSE-ITEMS.md](LICENSE-ITEMS.md).
+- Bundles must be 20 MB or smaller.
+- Presets must be 1 MB or smaller.
+- You made the item, or you have the right to share everything in it.
+- Items are shared under CC BY 4.0 per [LICENSE-ITEMS.md](LICENSE-ITEMS.md).
 
 ## Layout
 
 ```
-index.json                    the list of every item, made by tools/add_item.py
-items/<name>/<name>.absproj   the Community bundle
-items/<name>/thumb.webp       its thumbnail
-items/<name>/item.json        its details
-tools/add_item.py             adds a bundle and rebuilds index.json
+README.md                       overview, usage, and rules
+LICENSE-ITEMS.md                item licence (CC BY 4.0)
+index.json                      generated index of all items
+bundles/README.md               what goes in bundles/
+bundles/<name>/<name>.absproj   Community bundle (at most 20 MB)
+bundles/<name>/thumb.webp       bundle thumbnail
+bundles/<name>/item.json        bundle details
+presets/README.md               what goes in presets/
+presets/<name>/<name>.xml       layer preset (at most 1 MB)
+presets/<name>/thumb.webp       optional thumbnail (at most 512 KB)
+presets/<name>/item.json        preset details
+tools/README.md                 reserved for custom tools
+scripts/community.py            maintainer script
+.github/workflows/check.yml     CI workflow
 ```
 
 ## For the maintainer
 
 ```
-python3 tools/add_item.py path/to/Item.absproj
+python3 scripts/community.py add FILE...
+python3 scripts/community.py index
+python3 scripts/community.py check
+python3 scripts/community.py selftest
 ```
 
-The script checks the file (size, Community bundle details, thumbnail), makes the item folder and rebuilds `index.json`.
-`python3 tools/add_item.py --rebuild` only rebuilds `index.json`, and `python3 tools/add_item.py --selftest` checks the
-script itself.
+- `add` adds `.absproj` bundles or `.xml` presets and updates `index.json`. Presets also accept `--thumb`, `--creator`, `--description`, and `--tags`.
+- `index` rebuilds `index.json` from every `item.json`.
+- `check` verifies files, sizes, SHA-256 hashes, paths, limits, READMEs, and `index.json`.
+- `selftest` runs built-in tests in temporary folders.

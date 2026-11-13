@@ -1,5 +1,43 @@
 {
  "format": "absentmotion-community",
- "version": 1,
- "items": []
+ "version": 2,
+ "items": [
+  {
+   "kind": "bundle",
+   "name": "glow-title",
+   "title": "Glow title",
+   "creator": "AbsentMotion",
+   "description": "A big title that pops in with an orange glow. Tap the text to write your own.",
+   "tags": [
+    "Text",
+    "Intro",
+    "Glow"
+   ],
+   "added": "2026-11-13",
+   "file": "bundles/glow-title/glow-title.absproj",
+   "bytes": 11256,
+   "sha256": "7cacddd07e2b8f49fead97a5c08f1195fde5621b7d58c8c24750423a36691b35",
+   "thumbnail": "bundles/glow-title/thumb.webp",
+   "width": 1080,
+   "height": 1080,
+   "lengthMs": 2999
+  },
+  {
+   "kind": "preset",
+   "name": "glow-pop",
+   "title": "Glow pop",
+   "creator": "AbsentMotion",
+   "description": "Pops a text layer in with a slight bounce and an orange glow. Works best on big titles.",
+   "tags": [
+    "Text",
+    "Glow",
+    "Intro"
+   ],
+   "added": "2026-11-13",
+   "file": "presets/glow-pop/glow-pop.xml",
+   "bytes": 1346,
+   "sha256": "ee77b56aa69c963d53cc97bb8a2a7817e99e359754fddd51a9a377e2608764f1",
+   "thumbnail": "presets/glow-pop/thumb.webp"
+  }
+ ]
 }

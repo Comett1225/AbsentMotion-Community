@@ -1,0 +1,17 @@
+{
+ "kind": "preset",
+ "name": "glow-pop",
+ "title": "Glow pop",
+ "creator": "AbsentMotion",
+ "description": "Pops a text layer in with a slight bounce and an orange glow. Works best on big titles.",
+ "tags": [
+  "Text",
+  "Glow",
+  "Intro"
+ ],
+ "added": "2026-11-13",
+ "file": "presets/glow-pop/glow-pop.xml",
+ "bytes": 1346,
+ "sha256": "ee77b56aa69c963d53cc97bb8a2a7817e99e359754fddd51a9a377e2608764f1",
+ "thumbnail": "presets/glow-pop/thumb.webp"
+}

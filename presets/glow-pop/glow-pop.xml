@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<scene title="Glow pop" width="1080" height="1080" exportWidth="1080" exportHeight="1080" precompose="dynamicResolution" bgcolor="#00000000" totalTime="2999" fps="30" depthOrder="true" amver="1002592" ffver="107" am="app.absentmotion" amplatform="android" retime="freeze" retimeAdaptFPS="false" type="preset" modifiedTime="1794542360474">
+  <text id="12" label="Title" startTime="0" endTime="2999" fillType="color" mediaFillMode="fill" size="72.0" font="googlefonts?name=Anton&amp;weight=400" wrapWidth="1000" align="center">
+    <transform>
+      <location value="540.0,490.0,0" />
+      <scale>
+        <kf t="0" v="0.7,0.7" />
+        <kf t="0.3" v="1.05,1.05" />
+        <kf t="0.4" v="1,1" />
+      </scale>
+      <opacity>
+        <kf t="0" v="0" />
+        <kf t="0.25" v="1" />
+      </opacity>
+    </transform>
+    <fillColor value="#ffffffff" />
+    <content>YOUR TITLE</content>
+    <effect id="absent.glow" locallyApplied="false">
+      <property name="radius" type="float">
+        <kf t="0.2" v="0" />
+        <kf t="0.5" v="70" />
+        <kf t="1" v="45" />
+      </property>
+      <property name="alpha" type="float" value="0.85" />
+      <property name="hardness" type="float" value="0.3" />
+      <property name="color" type="color" value="#ffff6a3d" />
+    </effect>
+  </text>
+</scene>
