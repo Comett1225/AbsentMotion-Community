@@ -1,6 +1,6 @@
 # AbsentMotion Community
 
-Things people made with [AbsentMotion](https://github.com/Comett1225/AbsentMotion): project bundles and layer presets, with custom tools planned later.
+Things people made with [AbsentMotion](https://github.com/Comett1225/AbsentMotion): project bundles and layer presets.
 
 ## Using items
 
@@ -40,7 +40,6 @@ presets/README.md               what goes in presets/
 presets/<name>/<name>.xml       layer preset (at most 1 MB)
 presets/<name>/thumb.webp       optional thumbnail (at most 512 KB)
 presets/<name>/item.json        preset details
-tools/README.md                 reserved for custom tools
 scripts/community.py            maintainer script
 .github/workflows/check.yml     CI workflow
 ```

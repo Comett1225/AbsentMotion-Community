@@ -27,13 +27,11 @@ INDEX_VERSION = 2
 KIND_FOLDERS = {
     "bundles": "bundle",
     "presets": "preset",
-    "tools": "tool",
 }
 REQUIRED_READMES = (
     "README.md",
     "bundles/README.md",
     "presets/README.md",
-    "tools/README.md",
 )
 LAYER_TAGS = frozenset({
     "shape",
@@ -769,12 +767,12 @@ def selftest():
         preset_json_path.write_text(saved_preset_json, encoding="utf-8")
         assert check_repo(root) == []
 
-        tools_readme = root / "tools/README.md"
-        saved_readme = tools_readme.read_text(encoding="utf-8")
-        tools_readme.unlink()
+        preset_readme = root / "presets/README.md"
+        saved_readme = preset_readme.read_text(encoding="utf-8")
+        preset_readme.unlink()
         readme_problems = check_repo(root)
-        assert any("tools/README.md" in problem for problem in readme_problems), readme_problems
-        tools_readme.write_text(saved_readme, encoding="utf-8")
+        assert any("presets/README.md" in problem for problem in readme_problems), readme_problems
+        preset_readme.write_text(saved_readme, encoding="utf-8")
         assert check_repo(root) == []
 
         saved_index = (root / "index.json").read_text(encoding="utf-8")
