@@ -13,7 +13,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 BUNDLE_LIMIT = 20 * 1024 * 1024
 PRESET_LIMIT = 1 * 1024 * 1024
-THUMB_LIMIT = 512 * 1024
 TITLE_LIMIT = 80
 CREATOR_LIMIT = 80
 DESCRIPTION_LIMIT = 500
@@ -88,10 +87,6 @@ class Rejected(Exception):
 
 def is_non_bool_int(value):
     return isinstance(value, int) and not isinstance(value, bool)
-
-
-def is_webp(data):
-    return len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP"
 
 
 def slugify(text):
@@ -228,7 +223,7 @@ def read_bundle(path):
     return details, thumb_bytes, size, sha256
 
 
-def read_preset(path, thumb_path=None):
+def read_preset(path):
     if not path.is_file():
         raise Rejected(f"{path} is not a file")
     size = path.stat().st_size
@@ -249,19 +244,8 @@ def read_preset(path, thumb_path=None):
     if len(title) > TITLE_LIMIT:
         raise Rejected(f"{path.name} title is longer than {TITLE_LIMIT} characters")
 
-    thumb_bytes = None
-    if thumb_path is not None:
-        if not thumb_path.is_file():
-            raise Rejected(f"{thumb_path} is not a file")
-        thumb_size = thumb_path.stat().st_size
-        if thumb_size > THUMB_LIMIT:
-            raise Rejected(f"{thumb_path.name} is {thumb_size / 1024:.0f} KB; the thumbnail limit is 512 KB")
-        thumb_bytes = thumb_path.read_bytes()
-        if not is_webp(thumb_bytes):
-            raise Rejected(f"{thumb_path.name} is not a WebP image")
-
     sha256 = hashlib.sha256(raw_bytes).hexdigest()
-    return title, raw_bytes, thumb_bytes, size, sha256
+    return title, raw_bytes, size, sha256
 
 
 def add_bundle(path, root=ROOT):
@@ -295,7 +279,7 @@ def add_bundle(path, root=ROOT):
     return f"bundles/{name}"
 
 
-def add_preset(path, root=ROOT, thumb_path=None, creator=None, description=None, tags=None):
+def add_preset(path, root=ROOT, creator=None, description=None, tags=None):
     clean_creator = creator.strip() if creator is not None else None
     if clean_creator is not None and len(clean_creator) > CREATOR_LIMIT:
         raise Rejected(f"creator is longer than {CREATOR_LIMIT} characters")
@@ -304,7 +288,7 @@ def add_preset(path, root=ROOT, thumb_path=None, creator=None, description=None,
         raise Rejected(f"description is longer than {DESCRIPTION_LIMIT} characters")
     clean_tags = parse_tags_argument(tags)
 
-    title, xml_bytes, thumb_bytes, size, sha256 = read_preset(path, thumb_path)
+    title, xml_bytes, size, sha256 = read_preset(path)
     presets_dir = root / "presets"
     presets_dir.mkdir(parents=True, exist_ok=True)
     name = unique_slug(presets_dir, title)
@@ -329,24 +313,20 @@ def add_preset(path, root=ROOT, thumb_path=None, creator=None, description=None,
     info["file"] = item_rel
     info["bytes"] = size
     info["sha256"] = sha256
-    if thumb_bytes is not None:
-        thumb_rel = f"presets/{name}/thumb.webp"
-        (root / thumb_rel).write_bytes(thumb_bytes)
-        info["thumbnail"] = thumb_rel
 
     (folder / "item.json").write_text(json.dumps(info, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     rebuild_index(root)
     return f"presets/{name}"
 
 
-def add_item(path, root=ROOT, thumb_path=None, creator=None, description=None, tags=None):
+def add_item(path, root=ROOT, creator=None, description=None, tags=None):
     suffix = path.suffix.lower()
     if suffix == ".absproj":
-        if thumb_path is not None or creator is not None or description is not None or tags is not None:
-            raise Rejected(f"{path.name}: --thumb, --creator, --description, and --tags only apply to .xml presets")
+        if creator is not None or description is not None or tags is not None:
+            raise Rejected(f"{path.name}: --creator, --description, and --tags only apply to .xml presets")
         return add_bundle(path, root)
     if suffix == ".xml":
-        return add_preset(path, root, thumb_path=thumb_path, creator=creator, description=description, tags=tags)
+        return add_preset(path, root, creator=creator, description=description, tags=tags)
     raise Rejected(f"{path.name}: expected a .absproj bundle or .xml preset")
 
 
@@ -524,7 +504,12 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
     has_valid_thumb = False
     if expected_kind == "bundle" and thumb_rel is None:
         problems.append(f"{folder_prefix}item.json: bundles must have a thumbnail")
-    if thumb_rel is not None:
+    if expected_kind == "preset":
+        if thumb_rel is not None:
+            problems.append(f"{folder_prefix}item.json: presets have no thumbnail; the app draws the picture from the preset")
+        if (folder / "thumb.webp").exists():
+            problems.append(f"{folder_prefix}: presets have no thumb.webp; the app draws the picture from the preset")
+    elif thumb_rel is not None:
         thumb_error = validate_repo_path(thumb_rel, folder_prefix)
         if thumb_error:
             problems.append(f"{folder_prefix}item.json: invalid thumbnail path ({thumb_error})")
@@ -535,8 +520,6 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
             thumb_file = root / thumb_rel
             if not thumb_file.is_file():
                 problems.append(f"{folder_prefix}: missing thumbnail {thumb_rel}")
-            elif expected_kind == "preset" and thumb_file.stat().st_size > THUMB_LIMIT:
-                problems.append(f"{folder_prefix}: {thumb_rel} exceeds 512 KB thumbnail limit")
 
     allowed_names = {"item.json"}
     if item_file_name is not None:
@@ -659,12 +642,9 @@ def selftest():
 
         good_preset = root / "fade.xml"
         create_fake_preset(good_preset, '<scene title="Fade In"><shape id="1"/></scene>')
-        preset_thumb = root / "picture.webp"
-        preset_thumb.write_bytes(b"RIFF0000WEBP")
         assert add_item(
             good_preset,
             root,
-            thumb_path=preset_thumb,
             creator="PresetMaker",
             description="Smooth fade",
             tags="Shape, Fade",
@@ -674,8 +654,9 @@ def selftest():
         preset_item = json.loads((root / "presets/fade-in/item.json").read_text(encoding="utf-8"))
         assert preset_item["kind"] == "preset"
         assert preset_item["file"] == "presets/fade-in/fade-in.xml"
-        assert preset_item["thumbnail"] == "presets/fade-in/thumb.webp"
+        assert "thumbnail" not in preset_item
         assert preset_item["tags"] == ["Shape", "Fade"]
+        assert sorted(child.name for child in (root / "presets/fade-in").iterdir()) == ["fade-in.xml", "item.json"]
         preset_two = json.loads((root / "presets/fade-in-2/item.json").read_text(encoding="utf-8"))
         assert "thumbnail" not in preset_two
 
@@ -722,13 +703,29 @@ def selftest():
         create_fake_preset(no_title, "<scene><text/></scene>")
         expect_rejected(lambda: add_item(no_title, root), "no title attribute")
 
-        bad_thumb = root / "bad.png"
-        bad_thumb.write_bytes(b"PNG000000000")
-        expect_rejected(lambda: add_item(good_preset, root, thumb_path=bad_thumb), "not a WebP image")
+        expect_rejected(lambda: add_item(good_bundle, root, creator="Someone"), "only apply to .xml presets")
+        _, unknown = build_parser().parse_known_args(["add", str(good_preset), "--thumb", "picture.webp"])
+        assert "--thumb" in unknown, unknown
 
-        big_thumb = root / "big.webp"
-        big_thumb.write_bytes(b"RIFF0000WEBP" + (b"\0" * THUMB_LIMIT))
-        expect_rejected(lambda: add_item(good_preset, root, thumb_path=big_thumb), "512 KB")
+        preset_folder = root / "presets/fade-in"
+        stray_thumb = preset_folder / "thumb.webp"
+        stray_thumb.write_bytes(b"RIFF0000WEBP")
+        thumb_problems = check_repo(root)
+        assert any("presets have no thumb.webp" in problem for problem in thumb_problems), thumb_problems
+        stray_thumb.unlink()
+        assert check_repo(root) == []
+
+        preset_json = preset_folder / "item.json"
+        saved_json = preset_json.read_text(encoding="utf-8")
+        with_thumb = json.loads(saved_json)
+        with_thumb["thumbnail"] = "presets/fade-in/thumb.webp"
+        preset_json.write_text(json.dumps(with_thumb, indent=1) + "\n", encoding="utf-8")
+        rebuild_index(root)
+        field_problems = check_repo(root)
+        assert any("presets have no thumbnail" in problem for problem in field_problems), field_problems
+        preset_json.write_text(saved_json, encoding="utf-8")
+        rebuild_index(root)
+        assert check_repo(root) == []
 
         bundle_target = root / "bundles/glow-intro/glow-intro.absproj"
         original_bytes = bundle_target.read_bytes()
@@ -794,7 +791,6 @@ def build_parser():
 
     add_parser = subparsers.add_parser("add", help="add .absproj bundles or .xml presets")
     add_parser.add_argument("files", nargs="+", type=Path, metavar="FILE", help="bundle (.absproj) or preset (.xml) files to add")
-    add_parser.add_argument("--thumb", type=Path, metavar="WEBP", help="optional WebP thumbnail for a preset (at most 512 KB)")
     add_parser.add_argument("--creator", help="creator name for presets (at most 80 characters)")
     add_parser.add_argument("--description", help="description for presets (at most 500 characters)")
     add_parser.add_argument("--tags", help="comma-separated tags for presets (up to 8 tags, 30 characters each)")
@@ -832,16 +828,12 @@ def main():
         return 0
 
     if args.command == "add":
-        if args.thumb is not None and len(args.files) != 1:
-            print("rejected: --thumb can only be used when adding one preset file", file=sys.stderr)
-            return 1
         failed = 0
         for file in args.files:
             try:
                 added_folder = add_item(
                     file,
                     root=ROOT,
-                    thumb_path=args.thumb,
                     creator=args.creator,
                     description=args.description,
                     tags=args.tags,

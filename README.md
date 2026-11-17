@@ -26,6 +26,13 @@ Only the maintainer adds items to this repository.
 - You made the item, or you have the right to share everything in it.
 - Items are shared under CC BY 4.0 per [LICENSE-ITEMS.md](LICENSE-ITEMS.md).
 
+## Pictures
+
+Every picture in the Community tab shows the item itself.
+
+- A bundle's picture is a frame of its own project. The creator picks the moment and the square when exporting the Community bundle, and `scripts/community.py` copies that picture out of the bundle.
+- A preset has no picture file. The app draws the preset itself and shows its most visible moment.
+
 ## Layout
 
 ```
@@ -34,11 +41,10 @@ LICENSE-ITEMS.md                item licence (CC BY 4.0)
 index.json                      generated index of all items
 bundles/README.md               what goes in bundles/
 bundles/<name>/<name>.absproj   Community bundle (at most 20 MB)
-bundles/<name>/thumb.webp       bundle thumbnail
+bundles/<name>/thumb.webp       bundle picture, copied out of the bundle
 bundles/<name>/item.json        bundle details
 presets/README.md               what goes in presets/
 presets/<name>/<name>.xml       layer preset (at most 1 MB)
-presets/<name>/thumb.webp       optional thumbnail (at most 512 KB)
 presets/<name>/item.json        preset details
 scripts/community.py            maintainer script
 .github/workflows/check.yml     CI workflow
@@ -53,7 +59,7 @@ python3 scripts/community.py check
 python3 scripts/community.py selftest
 ```
 
-- `add` adds `.absproj` bundles or `.xml` presets and updates `index.json`. Presets also accept `--thumb`, `--creator`, `--description`, and `--tags`.
+- `add` adds `.absproj` bundles or `.xml` presets and updates `index.json`. Presets also accept `--creator`, `--description`, and `--tags`. Presets take no picture.
 - `index` rebuilds `index.json` from every `item.json`.
-- `check` verifies files, sizes, SHA-256 hashes, paths, limits, READMEs, and `index.json`.
+- `check` verifies files, sizes, SHA-256 hashes, paths, limits, READMEs, and `index.json`, and rejects a preset folder with a `thumb.webp` or a `thumbnail` in its `item.json`.
 - `selftest` runs built-in tests in temporary folders.
