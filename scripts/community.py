@@ -7,12 +7,18 @@ import sys
 import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
+import zlib
 from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 BUNDLE_LIMIT = 20 * 1024 * 1024
 PRESET_LIMIT = 1 * 1024 * 1024
+MANIFEST_LIMIT = 1 * 1024 * 1024
+THUMB_LIMIT = 4 * 1024 * 1024
+ENTRY_COUNT_LIMIT = 2000
+UNPACKED_LIMIT = 2 * 1024 * 1024 * 1024
+ZIP_ERRORS = (zipfile.BadZipFile, zipfile.LargeZipFile, RuntimeError, NotImplementedError, OSError, EOFError, zlib.error)
 TITLE_LIMIT = 80
 CREATOR_LIMIT = 80
 DESCRIPTION_LIMIT = 500
@@ -78,7 +84,7 @@ INDEX_FIELDS = (
 REPO_PATH_PATTERN = re.compile(r"^[A-Za-z0-9._/-]+$")
 SLUG_PATTERN = re.compile(r"^[a-z0-9-]{1,48}$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
-DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}Z)?$")
 
 
 class Rejected(Exception):
@@ -138,6 +144,10 @@ def validate_repo_path(value, expected_prefix):
     return None
 
 
+def is_webp(data):
+    return len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP"
+
+
 def read_bundle(path):
     if not path.is_file():
         raise Rejected(f"{path} is not a file")
@@ -148,76 +158,97 @@ def read_bundle(path):
         bundle = zipfile.ZipFile(path)
     except zipfile.BadZipFile:
         raise Rejected(f"{path.name} is not an AbsentMotion project file")
-    with bundle:
-        names = set(bundle.namelist())
-        if "manifest.json" not in names or "project.xml" not in names:
-            raise Rejected(f"{path.name} is not an AbsentMotion project file")
-        try:
-            manifest = json.loads(bundle.read("manifest.json"))
-        except (ValueError, UnicodeDecodeError):
-            raise Rejected(f"{path.name} has a damaged manifest")
-        if not isinstance(manifest, dict) or manifest.get("format") != "absentmotion-package":
-            raise Rejected(f"{path.name} is not an AbsentMotion project file")
-        community = manifest.get("community")
-        if not isinstance(community, dict):
-            raise Rejected(
-                f"{path.name} is not a Community bundle: export it with Export > Project Bundle > Community bundle"
-            )
-        thumbnail = community.get("thumbnail")
-        if not isinstance(thumbnail, str) or not thumbnail or thumbnail not in names:
-            raise Rejected(f"{path.name} has no thumbnail")
-        thumb_bytes = bundle.read(thumbnail)
-        if not thumb_bytes:
-            raise Rejected(f"{path.name} has an empty thumbnail")
-        raw_title = community.get("title")
-        if raw_title is None:
-            raw_title = manifest.get("title")
-        title = str(raw_title or "").strip()
-        if not title:
-            raise Rejected(f"{path.name} has no title")
-        if len(title) > TITLE_LIMIT:
-            raise Rejected(f"{path.name} title is longer than {TITLE_LIMIT} characters")
+    try:
+        with bundle:
+            return read_bundle_entries(path, bundle, size)
+    except ZIP_ERRORS as error:
+        raise Rejected(f"{path.name} is damaged: {error}")
 
-        details = {"title": title}
-        for key in BUNDLE_DETAILS:
-            if key == "title":
-                continue
-            value = community.get(key)
-            if value is None:
-                continue
-            if key == "creator":
-                if not isinstance(value, str):
-                    raise Rejected(f"{path.name} creator must be a string")
-                cleaned = value.strip()
-                if len(cleaned) > CREATOR_LIMIT:
-                    raise Rejected(f"{path.name} creator is longer than {CREATOR_LIMIT} characters")
-                if cleaned:
-                    details[key] = cleaned
-            elif key == "description":
-                if not isinstance(value, str):
-                    raise Rejected(f"{path.name} description must be a string")
-                cleaned = value.strip()
-                if len(cleaned) > DESCRIPTION_LIMIT:
-                    raise Rejected(f"{path.name} description is longer than {DESCRIPTION_LIMIT} characters")
-                if cleaned:
-                    details[key] = cleaned
-            elif key == "tags":
-                if not isinstance(value, list) or not all(isinstance(tag, str) for tag in value):
-                    raise Rejected(f"{path.name} tags must be a list of strings")
-                cleaned_tags = [tag.strip() for tag in value if tag.strip()]
-                if len(cleaned_tags) > MAX_TAGS:
-                    raise Rejected(f"{path.name} has more than {MAX_TAGS} tags")
-                for tag in cleaned_tags:
-                    if len(tag) > TAG_LIMIT:
-                        raise Rejected(f"{path.name} tag {tag!r} is longer than {TAG_LIMIT} characters")
-                if cleaned_tags:
-                    details[key] = cleaned_tags
-            elif key in ("width", "height", "lengthMs"):
-                if not is_non_bool_int(value) or value < 0:
-                    raise Rejected(f"{path.name} {key} must be a non-negative integer")
-                details[key] = value
-            else:
-                details[key] = value
+
+def read_bundle_entries(path, bundle, size):
+    entries = bundle.infolist()
+    names = {entry.filename for entry in entries}
+    if "manifest.json" not in names or "project.xml" not in names:
+        raise Rejected(f"{path.name} is not an AbsentMotion project file")
+    if len(entries) > ENTRY_COUNT_LIMIT:
+        raise Rejected(f"{path.name} has more than {ENTRY_COUNT_LIMIT} files")
+    if sum(entry.file_size for entry in entries) > UNPACKED_LIMIT:
+        raise Rejected(f"{path.name} unpacks to more than 2 GB")
+    if bundle.getinfo("manifest.json").file_size > MANIFEST_LIMIT:
+        raise Rejected(f"{path.name} has a damaged manifest")
+    damaged = bundle.testzip()
+    if damaged is not None:
+        raise Rejected(f"{path.name} is damaged: {damaged} does not match its checksum")
+    try:
+        manifest = json.loads(bundle.read("manifest.json"))
+    except (ValueError, UnicodeDecodeError):
+        raise Rejected(f"{path.name} has a damaged manifest")
+    if not isinstance(manifest, dict) or manifest.get("format") != "absentmotion-package":
+        raise Rejected(f"{path.name} is not an AbsentMotion project file")
+    community = manifest.get("community")
+    if not isinstance(community, dict):
+        raise Rejected(
+            f"{path.name} is not a Community bundle: export it with Export > Project Bundle > Community bundle"
+        )
+    thumbnail = community.get("thumbnail")
+    if not isinstance(thumbnail, str) or not thumbnail or thumbnail not in names:
+        raise Rejected(f"{path.name} has no thumbnail")
+    if bundle.getinfo(thumbnail).file_size > THUMB_LIMIT:
+        raise Rejected(f"{path.name} thumbnail is larger than 4 MB")
+    thumb_bytes = bundle.read(thumbnail)
+    if not thumb_bytes:
+        raise Rejected(f"{path.name} has an empty thumbnail")
+    if not is_webp(thumb_bytes):
+        raise Rejected(f"{path.name} thumbnail is not a WebP picture")
+    raw_title = community.get("title")
+    if raw_title is None:
+        raw_title = manifest.get("title")
+    title = str(raw_title or "").strip()
+    if not title:
+        raise Rejected(f"{path.name} has no title")
+    if len(title) > TITLE_LIMIT:
+        raise Rejected(f"{path.name} title is longer than {TITLE_LIMIT} characters")
+
+    details = {"title": title}
+    for key in BUNDLE_DETAILS:
+        if key == "title":
+            continue
+        value = community.get(key)
+        if value is None:
+            continue
+        if key == "creator":
+            if not isinstance(value, str):
+                raise Rejected(f"{path.name} creator must be a string")
+            cleaned = value.strip()
+            if len(cleaned) > CREATOR_LIMIT:
+                raise Rejected(f"{path.name} creator is longer than {CREATOR_LIMIT} characters")
+            if cleaned:
+                details[key] = cleaned
+        elif key == "description":
+            if not isinstance(value, str):
+                raise Rejected(f"{path.name} description must be a string")
+            cleaned = value.strip()
+            if len(cleaned) > DESCRIPTION_LIMIT:
+                raise Rejected(f"{path.name} description is longer than {DESCRIPTION_LIMIT} characters")
+            if cleaned:
+                details[key] = cleaned
+        elif key == "tags":
+            if not isinstance(value, list) or not all(isinstance(tag, str) for tag in value):
+                raise Rejected(f"{path.name} tags must be a list of strings")
+            cleaned_tags = [tag.strip() for tag in value if tag.strip()]
+            if len(cleaned_tags) > MAX_TAGS:
+                raise Rejected(f"{path.name} has more than {MAX_TAGS} tags")
+            for tag in cleaned_tags:
+                if len(tag) > TAG_LIMIT:
+                    raise Rejected(f"{path.name} tag {tag!r} is longer than {TAG_LIMIT} characters")
+            if cleaned_tags:
+                details[key] = cleaned_tags
+        elif key in ("width", "height", "lengthMs"):
+            if not is_non_bool_int(value) or value < 0:
+                raise Rejected(f"{path.name} {key} must be a non-negative integer")
+            details[key] = value
+        else:
+            details[key] = value
 
     sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
     return details, thumb_bytes, size, sha256
@@ -236,8 +267,11 @@ def read_preset(path):
         raise Rejected(f"{path.name} is not valid XML")
     if root.tag != "scene":
         raise Rejected(f"{path.name} is not a layer preset: root tag must be <scene>")
-    if not any(child.tag in LAYER_TAGS for child in root):
+    layers = sum(child.tag in LAYER_TAGS for child in root)
+    if layers == 0:
         raise Rejected(f"{path.name} is not a layer preset: <scene> has no layer element")
+    if layers > 1:
+        raise Rejected(f"{path.name} is not a layer preset: <scene> has {layers} layers, a preset has one")
     title = (root.attrib.get("title") or "").strip()
     if not title:
         raise Rejected(f"{path.name} has no title attribute on <scene>")
@@ -268,7 +302,7 @@ def add_bundle(path, root=ROOT):
     for key in BUNDLE_DETAILS:
         if key in details and details[key] is not None:
             info[key] = details[key]
-    info["added"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    info["added"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     info["file"] = item_rel
     info["bytes"] = size
     info["sha256"] = sha256
@@ -309,7 +343,7 @@ def add_preset(path, root=ROOT, creator=None, description=None, tags=None):
         info["description"] = clean_description
     if clean_tags:
         info["tags"] = clean_tags
-    info["added"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    info["added"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     info["file"] = item_rel
     info["bytes"] = size
     info["sha256"] = sha256
@@ -409,10 +443,10 @@ def check_item_metadata(info, expected_kind, folder_prefix, problems):
 
     added = info.get("added")
     if not isinstance(added, str) or not DATE_PATTERN.fullmatch(added):
-        problems.append(f"{folder_prefix}item.json: added must be YYYY-MM-DD")
+        problems.append(f"{folder_prefix}item.json: added must be YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ")
     else:
         try:
-            datetime.strptime(added, "%Y-%m-%d")
+            datetime.strptime(added, "%Y-%m-%dT%H:%M:%SZ" if "T" in added else "%Y-%m-%d")
         except ValueError:
             problems.append(f"{folder_prefix}item.json: added is not a valid calendar date: {added!r}")
 
@@ -499,6 +533,11 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
             actual_sha = hashlib.sha256(target_file.read_bytes()).hexdigest()
             if recorded_sha is not None and actual_sha != recorded_sha:
                 problems.append(f"{folder_prefix}: sha256 mismatch for {file_rel}")
+            if expected_kind == "preset":
+                try:
+                    read_preset(target_file)
+                except Rejected as rejected:
+                    problems.append(f"{folder_prefix}: {rejected}")
 
     thumb_rel = info.get("thumbnail")
     has_valid_thumb = False
@@ -520,6 +559,12 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
             thumb_file = root / thumb_rel
             if not thumb_file.is_file():
                 problems.append(f"{folder_prefix}: missing thumbnail {thumb_rel}")
+            elif thumb_file.stat().st_size > THUMB_LIMIT:
+                problems.append(f"{folder_prefix}: {thumb_rel} is larger than 4 MB")
+            else:
+                with thumb_file.open("rb") as thumb:
+                    if not is_webp(thumb.read(12)):
+                        problems.append(f"{folder_prefix}: {thumb_rel} is not a WebP picture")
 
     allowed_names = {"item.json"}
     if item_file_name is not None:
@@ -573,7 +618,7 @@ def check_repo(root=ROOT):
     return problems
 
 
-def create_fake_bundle(path, community=None, padding=0):
+def create_fake_bundle(path, community=None, padding=0, thumb=b"RIFF0000WEBP"):
     with zipfile.ZipFile(path, "w") as bundle:
         bundle.writestr("project.xml", '<scene title="Glow intro"/>')
         manifest = {
@@ -586,7 +631,7 @@ def create_fake_bundle(path, community=None, padding=0):
         }
         if community is not None:
             manifest["community"] = community
-            bundle.writestr("community/thumb.webp", b"RIFF0000WEBP")
+            bundle.writestr("community/thumb.webp", thumb)
         if padding:
             bundle.writestr("media/1_big.bin", b"\0" * padding, compress_type=zipfile.ZIP_STORED)
         bundle.writestr("manifest.json", json.dumps(manifest))
@@ -663,18 +708,31 @@ def selftest():
         index = json.loads((root / "index.json").read_text(encoding="utf-8"))
         assert index["format"] == INDEX_FORMAT
         assert index["version"] == INDEX_VERSION
-        assert [entry["name"] for entry in index["items"]] == [
-            "glow-intro-2",
-            "glow-intro",
-            "fade-in-2",
-            "fade-in",
-        ]
+        assert sorted(entry["name"] for entry in index["items"]) == ["fade-in", "fade-in-2", "glow-intro", "glow-intro-2"]
+        added_order = [(entry["added"], entry["name"]) for entry in index["items"]]
+        assert added_order == sorted(added_order, reverse=True), added_order
+        assert all(re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", entry["added"]) for entry in index["items"])
         assert all("path" not in entry for entry in index["items"])
         assert check_repo(root) == []
 
         plain_bundle = root / "plain.absproj"
         create_fake_bundle(plain_bundle)
         expect_rejected(lambda: add_item(plain_bundle, root), "not a Community bundle")
+
+        png_thumb = root / "png-thumb.absproj"
+        create_fake_bundle(png_thumb, details, thumb=b"\x89PNG\r\n\x1a\n0000")
+        expect_rejected(lambda: add_item(png_thumb, root), "not a WebP picture")
+
+        huge_thumb = root / "huge-thumb.absproj"
+        create_fake_bundle(huge_thumb, details, thumb=b"RIFF0000WEBP" + b"\0" * THUMB_LIMIT)
+        expect_rejected(lambda: add_item(huge_thumb, root), "larger than 4 MB")
+
+        damaged_bundle = root / "damaged.absproj"
+        create_fake_bundle(damaged_bundle, details, padding=1000)
+        damaged_bytes = bytearray(damaged_bundle.read_bytes())
+        damaged_bytes[damaged_bytes.index(b"\0" * 1000) + 500] = 1
+        damaged_bundle.write_bytes(bytes(damaged_bytes))
+        expect_rejected(lambda: add_item(damaged_bundle, root), "is damaged")
 
         over_bundle = root / "big.absproj"
         create_fake_bundle(over_bundle, details, padding=BUNDLE_LIMIT + 1)
@@ -698,6 +756,10 @@ def selftest():
         no_layer = root / "no-layer.xml"
         create_fake_preset(no_layer, '<scene title="X"><metadata/></scene>')
         expect_rejected(lambda: add_item(no_layer, root), "no layer element")
+
+        two_layers = root / "two-layers.xml"
+        create_fake_preset(two_layers, '<scene title="Two"><shape/><text/></scene>')
+        expect_rejected(lambda: add_item(two_layers, root), "a preset has one")
 
         no_title = root / "no-title.xml"
         create_fake_preset(no_title, "<scene><text/></scene>")
@@ -725,6 +787,14 @@ def selftest():
         assert any("presets have no thumbnail" in problem for problem in field_problems), field_problems
         preset_json.write_text(saved_json, encoding="utf-8")
         rebuild_index(root)
+        assert check_repo(root) == []
+
+        thumb_target = root / "bundles/glow-intro/thumb.webp"
+        saved_thumb = thumb_target.read_bytes()
+        thumb_target.write_bytes(b"\x89PNG\r\n\x1a\n0000")
+        webp_problems = check_repo(root)
+        assert any("not a WebP picture" in problem for problem in webp_problems), webp_problems
+        thumb_target.write_bytes(saved_thumb)
         assert check_repo(root) == []
 
         bundle_target = root / "bundles/glow-intro/glow-intro.absproj"
@@ -841,6 +911,9 @@ def main():
                 print(f"added {added_folder}")
             except Rejected as rejected:
                 print(f"rejected: {rejected}", file=sys.stderr)
+                failed += 1
+            except (OSError, ValueError, UnicodeDecodeError) as error:
+                print(f"error: {file.name}: {error}", file=sys.stderr)
                 failed += 1
         return 1 if failed else 0
 
