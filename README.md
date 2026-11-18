@@ -2,6 +2,8 @@
 
 Things people made with [AbsentMotion](https://github.com/Comett1225/AbsentMotion): project bundles and layer presets.
 
+**Share your own: [send it with the Community form](https://forms.gle/Xyn4TiKNJ9kUPQ7x8).** Upload the file to any file hosting website (an anonymous one, Google Drive or MEGA) and paste the link in the form.
+
 ## Using items
 
 In AbsentMotion 5.2 or later, open **Home > Community**, tap an item, and tap **Add**.
@@ -13,17 +15,19 @@ You can also download an item file from GitHub and import it yourself:
 
 ## Sharing your own
 
-Only the maintainer adds items to this repository.
+Only the maintainer adds items to this repository. Everything is checked by a person before it goes up.
 
 - For a project bundle, open your project in AbsentMotion, go to **Export**, tap the arrow next to **Project Bundle**, and choose **Community bundle**.
-- Sharing your own layer presets from the app is coming in a later update. Until then, only the maintainer adds presets.
-- Send your file on [Discord](https://discord.gg/xXEHj8Sx8X) or through the report form linked in the app's About screen.
+- For a preset, put it on one layer in a project and export that project as a Community bundle the same way.
+- Upload the `.absproj` file to any file hosting website: an anonymous one works, and so do Google Drive and MEGA. Anyone with the link must be able to download it.
+- Paste the link in the [Community form](https://forms.gle/Xyn4TiKNJ9kUPQ7x8) (also at the top of the Community tab in the app) and choose Project or Preset.
 
 ## Rules
 
 - Bundles must be 20 MB or smaller.
 - Presets must be 1 MB or smaller.
-- You made the item, or you have the right to share everything in it.
+- You made the item, or you credit who made it in the description (someone else's edit, project, preset or art is fine with credit). Paid assets are not.
+- If something you made was shared here and you want it taken down, contact **comett1225** on Discord.
 - Items are shared under CC BY 4.0 per [LICENSE-ITEMS.md](LICENSE-ITEMS.md).
 
 ## Pictures
