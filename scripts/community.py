@@ -63,6 +63,12 @@ BUNDLE_DETAILS = (
     "effects",
     "licence",
 )
+PRESET_DETAILS = (
+    "title",
+    "description",
+    "tags",
+    "creator",
+)
 INDEX_FIELDS = (
     "kind",
     "name",
@@ -190,16 +196,28 @@ def read_bundle_entries(path, bundle, size):
         raise Rejected(
             f"{path.name} is not a Community bundle: export it with Export > Project Bundle > Community bundle"
         )
-    thumbnail = community.get("thumbnail")
-    if not isinstance(thumbnail, str) or not thumbnail or thumbnail not in names:
-        raise Rejected(f"{path.name} has no thumbnail")
-    if bundle.getinfo(thumbnail).file_size > THUMB_LIMIT:
-        raise Rejected(f"{path.name} thumbnail is larger than 4 MB")
-    thumb_bytes = bundle.read(thumbnail)
-    if not thumb_bytes:
-        raise Rejected(f"{path.name} has an empty thumbnail")
-    if not is_webp(thumb_bytes):
-        raise Rejected(f"{path.name} thumbnail is not a WebP picture")
+    kind = community.get("kind")
+    if kind not in (None, "project", "preset"):
+        raise Rejected(f"{path.name} has an unknown kind {kind!r}")
+    if kind == "preset":
+        if "thumbnail" in community or "community/thumb.webp" in names:
+            raise Rejected(f"{path.name} is a preset with a thumbnail; presets take no picture, the app draws the preset")
+        if bundle.getinfo("project.xml").file_size > BUNDLE_LIMIT:
+            raise Rejected(f"{path.name} scene is larger than 20 MB")
+        if read_preset_scene(path.name, bundle.read("project.xml")).attrib.get("type") != "preset":
+            raise Rejected(f"{path.name} is not a preset: its scene type is not preset")
+        thumb_bytes = None
+    else:
+        thumbnail = community.get("thumbnail")
+        if not isinstance(thumbnail, str) or not thumbnail or thumbnail not in names:
+            raise Rejected(f"{path.name} has no thumbnail")
+        if bundle.getinfo(thumbnail).file_size > THUMB_LIMIT:
+            raise Rejected(f"{path.name} thumbnail is larger than 4 MB")
+        thumb_bytes = bundle.read(thumbnail)
+        if not thumb_bytes:
+            raise Rejected(f"{path.name} has an empty thumbnail")
+        if not is_webp(thumb_bytes):
+            raise Rejected(f"{path.name} thumbnail is not a WebP picture")
     raw_title = community.get("title")
     if raw_title is None:
         raw_title = manifest.get("title")
@@ -210,7 +228,7 @@ def read_bundle_entries(path, bundle, size):
         raise Rejected(f"{path.name} title is longer than {TITLE_LIMIT} characters")
 
     details = {"title": title}
-    for key in BUNDLE_DETAILS:
+    for key in PRESET_DETAILS if kind == "preset" else BUNDLE_DETAILS:
         if key == "title":
             continue
         value = community.get(key)
@@ -251,7 +269,22 @@ def read_bundle_entries(path, bundle, size):
             details[key] = value
 
     sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
-    return details, thumb_bytes, size, sha256
+    return ("preset" if kind == "preset" else "bundle"), details, thumb_bytes, size, sha256
+
+
+def read_preset_scene(file_name, raw_bytes):
+    try:
+        root = ET.fromstring(raw_bytes)
+    except ET.ParseError:
+        raise Rejected(f"{file_name} is not valid XML")
+    if root.tag != "scene":
+        raise Rejected(f"{file_name} is not a layer preset: root tag must be <scene>")
+    layers = sum(child.tag in LAYER_TAGS for child in root)
+    if layers == 0:
+        raise Rejected(f"{file_name} is not a layer preset: <scene> has no layer element")
+    if layers > 1:
+        raise Rejected(f"{file_name} is not a layer preset: <scene> has {layers} layers, a preset has one")
+    return root
 
 
 def read_preset(path):
@@ -261,17 +294,7 @@ def read_preset(path):
     if size > PRESET_LIMIT:
         raise Rejected(f"{path.name} is {size / 1048576:.1f} MB; the limit is 1 MB")
     raw_bytes = path.read_bytes()
-    try:
-        root = ET.fromstring(raw_bytes)
-    except ET.ParseError:
-        raise Rejected(f"{path.name} is not valid XML")
-    if root.tag != "scene":
-        raise Rejected(f"{path.name} is not a layer preset: root tag must be <scene>")
-    layers = sum(child.tag in LAYER_TAGS for child in root)
-    if layers == 0:
-        raise Rejected(f"{path.name} is not a layer preset: <scene> has no layer element")
-    if layers > 1:
-        raise Rejected(f"{path.name} is not a layer preset: <scene> has {layers} layers, a preset has one")
+    root = read_preset_scene(path.name, raw_bytes)
     title = (root.attrib.get("title") or "").strip()
     if not title:
         raise Rejected(f"{path.name} has no title attribute on <scene>")
@@ -283,20 +306,19 @@ def read_preset(path):
 
 
 def add_bundle(path, root=ROOT):
-    details, thumb_bytes, size, sha256 = read_bundle(path)
-    bundles_dir = root / "bundles"
-    bundles_dir.mkdir(parents=True, exist_ok=True)
-    name = unique_slug(bundles_dir, details["title"])
-    folder = bundles_dir / name
+    kind, details, thumb_bytes, size, sha256 = read_bundle(path)
+    kind_dir_name = "presets" if kind == "preset" else "bundles"
+    kind_dir = root / kind_dir_name
+    kind_dir.mkdir(parents=True, exist_ok=True)
+    name = unique_slug(kind_dir, details["title"])
+    folder = kind_dir / name
     folder.mkdir(parents=True)
 
-    item_rel = f"bundles/{name}/{name}.absproj"
-    thumb_rel = f"bundles/{name}/thumb.webp"
+    item_rel = f"{kind_dir_name}/{name}/{name}.absproj"
     shutil.copyfile(path, root / item_rel)
-    (root / thumb_rel).write_bytes(thumb_bytes)
 
     info = {
-        "kind": "bundle",
+        "kind": kind,
         "name": name,
     }
     for key in BUNDLE_DETAILS:
@@ -306,11 +328,14 @@ def add_bundle(path, root=ROOT):
     info["file"] = item_rel
     info["bytes"] = size
     info["sha256"] = sha256
-    info["thumbnail"] = thumb_rel
+    if thumb_bytes is not None:
+        thumb_rel = f"bundles/{name}/thumb.webp"
+        (root / thumb_rel).write_bytes(thumb_bytes)
+        info["thumbnail"] = thumb_rel
 
     (folder / "item.json").write_text(json.dumps(info, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     rebuild_index(root)
-    return f"bundles/{name}"
+    return f"{kind_dir_name}/{name}"
 
 
 def add_preset(path, root=ROOT, creator=None, description=None, tags=None):
@@ -487,21 +512,22 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
 
     check_item_metadata(info, expected_kind, folder_prefix, problems)
 
+    file_rel = info.get("file")
+    preset_bundle = expected_kind == "preset" and isinstance(file_rel, str) and file_rel.endswith(".absproj")
+    limit = PRESET_LIMIT if expected_kind == "preset" and not preset_bundle else BUNDLE_LIMIT
+
     recorded_bytes = info.get("bytes")
     if not is_non_bool_int(recorded_bytes) or recorded_bytes < 0:
         problems.append(f"{folder_prefix}item.json: bytes must be a non-negative integer")
         recorded_bytes = None
-    elif expected_kind == "bundle" and recorded_bytes > BUNDLE_LIMIT:
-        problems.append(f"{folder_prefix}item.json: bytes exceeds 20 MB limit")
-    elif expected_kind == "preset" and recorded_bytes > PRESET_LIMIT:
-        problems.append(f"{folder_prefix}item.json: bytes exceeds 1 MB limit")
+    elif recorded_bytes > limit:
+        problems.append(f"{folder_prefix}item.json: bytes exceeds {limit >> 20} MB limit")
 
     recorded_sha = info.get("sha256")
     if not isinstance(recorded_sha, str) or not SHA256_PATTERN.fullmatch(recorded_sha):
         problems.append(f"{folder_prefix}item.json: sha256 must be 64 lowercase hex characters")
         recorded_sha = None
 
-    file_rel = info.get("file")
     item_file_name = None
     path_error = validate_repo_path(file_rel, folder_prefix)
     if path_error:
@@ -509,8 +535,10 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
     else:
         if expected_kind == "bundle" and file_rel != f"{folder_prefix}{name}.absproj":
             problems.append(f"{folder_prefix}item.json: bundle file must be {folder_prefix}{name}.absproj")
-        elif expected_kind == "preset" and file_rel != f"{folder_prefix}{name}.xml":
-            problems.append(f"{folder_prefix}item.json: preset file must be {folder_prefix}{name}.xml")
+        elif expected_kind == "preset" and file_rel not in (f"{folder_prefix}{name}.xml", f"{folder_prefix}{name}.absproj"):
+            problems.append(
+                f"{folder_prefix}item.json: preset file must be {folder_prefix}{name}.xml or {folder_prefix}{name}.absproj"
+            )
 
         target_file = root / file_rel
         if target_file.parent == folder:
@@ -526,16 +554,17 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
                 problems.append(
                     f"{folder_prefix}: size mismatch for {file_rel} (item.json has {recorded_bytes}, file has {actual_bytes})"
                 )
-            if expected_kind == "bundle" and actual_bytes > BUNDLE_LIMIT:
-                problems.append(f"{folder_prefix}: {file_rel} exceeds 20 MB limit ({actual_bytes} bytes)")
-            elif expected_kind == "preset" and actual_bytes > PRESET_LIMIT:
-                problems.append(f"{folder_prefix}: {file_rel} exceeds 1 MB limit ({actual_bytes} bytes)")
+            if actual_bytes > limit:
+                problems.append(f"{folder_prefix}: {file_rel} exceeds {limit >> 20} MB limit ({actual_bytes} bytes)")
             actual_sha = hashlib.sha256(target_file.read_bytes()).hexdigest()
             if recorded_sha is not None and actual_sha != recorded_sha:
                 problems.append(f"{folder_prefix}: sha256 mismatch for {file_rel}")
             if expected_kind == "preset":
                 try:
-                    read_preset(target_file)
+                    if not preset_bundle:
+                        read_preset(target_file)
+                    elif read_bundle(target_file)[0] != "preset":
+                        problems.append(f"{folder_prefix}: {file_rel} is a project bundle, not a preset")
                 except Rejected as rejected:
                     problems.append(f"{folder_prefix}: {rejected}")
 
@@ -618,9 +647,9 @@ def check_repo(root=ROOT):
     return problems
 
 
-def create_fake_bundle(path, community=None, padding=0, thumb=b"RIFF0000WEBP"):
+def create_fake_bundle(path, community=None, padding=0, thumb=b"RIFF0000WEBP", scene='<scene title="Glow intro"/>', media=None):
     with zipfile.ZipFile(path, "w") as bundle:
-        bundle.writestr("project.xml", '<scene title="Glow intro"/>')
+        bundle.writestr("project.xml", scene)
         manifest = {
             "format": "absentmotion-package",
             "version": 1,
@@ -629,9 +658,13 @@ def create_fake_bundle(path, community=None, padding=0, thumb=b"RIFF0000WEBP"):
             "media": [],
             "fonts": [],
         }
+        if media is not None:
+            bundle.writestr(media, b"RIFF0000WEBP")
+            manifest["media"].append({"uri": f"amproj:{media}", "file": media.split("_", 1)[1], "entry": media})
         if community is not None:
             manifest["community"] = community
-            bundle.writestr("community/thumb.webp", thumb)
+            if thumb is not None:
+                bundle.writestr("community/thumb.webp", thumb)
         if padding:
             bundle.writestr("media/1_big.bin", b"\0" * padding, compress_type=zipfile.ZIP_STORED)
         bundle.writestr("manifest.json", json.dumps(manifest))
@@ -842,6 +875,83 @@ def selftest():
         preset_readme.write_text(saved_readme, encoding="utf-8")
         assert check_repo(root) == []
 
+        preset_details = {
+            "kind": "preset",
+            "title": "Soft Glow",
+            "description": "A soft glow for pictures",
+            "tags": ["Glow", "Picture"],
+            "creator": "PresetMaker",
+            "licence": "CC BY 4.0",
+            "madeWith": "5.2.0",
+        }
+        layer = '<shape id="{}" fillType="media" fillImage="amproj:media/1_placeholder.webp"/>'
+        one_layer = f'<scene title="Soft Glow" type="preset">{layer.format(1)}</scene>'
+        placeholder = "media/1_placeholder.webp"
+
+        preset_bundle = root / "soft-glow.absproj"
+        create_fake_bundle(preset_bundle, preset_details, thumb=None, scene=one_layer, media=placeholder)
+        assert add_item(preset_bundle, root) == "presets/soft-glow"
+        bundle_preset = json.loads((root / "presets/soft-glow/item.json").read_text(encoding="utf-8"))
+        assert sorted(bundle_preset) == ["added", "bytes", "creator", "description", "file", "kind", "name", "sha256", "tags", "title"]
+        assert bundle_preset["kind"] == "preset" and bundle_preset["title"] == "Soft Glow"
+        assert bundle_preset["file"] == "presets/soft-glow/soft-glow.absproj"
+        assert bundle_preset["tags"] == ["Glow", "Picture"]
+        assert bundle_preset["bytes"] == preset_bundle.stat().st_size
+        assert bundle_preset["sha256"] == hashlib.sha256(preset_bundle.read_bytes()).hexdigest()
+        assert sorted(child.name for child in (root / "presets/soft-glow").iterdir()) == ["item.json", "soft-glow.absproj"]
+        index_entry = next(entry for entry in json.loads((root / "index.json").read_text(encoding="utf-8"))["items"] if entry["name"] == "soft-glow")
+        assert index_entry == {key: bundle_preset[key] for key in INDEX_FIELDS if key in bundle_preset}
+        assert check_repo(root) == []
+
+        project_kind = root / "project-kind.absproj"
+        create_fake_bundle(project_kind, dict(details, kind="project"))
+        assert add_item(project_kind, root).startswith("bundles/glow-intro-")
+
+        two_layer_bundle = root / "two-layer.absproj"
+        two_layer_scene = f'<scene title="Soft Glow" type="preset">{layer.format(1)}{layer.format(2)}</scene>'
+        create_fake_bundle(two_layer_bundle, preset_details, thumb=None, scene=two_layer_scene, media=placeholder)
+        expect_rejected(lambda: add_item(two_layer_bundle, root), "a preset has one")
+
+        over_preset_bundle = root / "big-preset.absproj"
+        create_fake_bundle(over_preset_bundle, preset_details, padding=BUNDLE_LIMIT + 1, thumb=None, scene=one_layer, media=placeholder)
+        expect_rejected(lambda: add_item(over_preset_bundle, root), "the limit is 20 MB")
+
+        thumb_field = root / "thumb-field.absproj"
+        create_fake_bundle(thumb_field, dict(preset_details, thumbnail="community/thumb.webp"), thumb=None, scene=one_layer, media=placeholder)
+        expect_rejected(lambda: add_item(thumb_field, root), "presets take no picture")
+        thumb_file = root / "thumb-file.absproj"
+        create_fake_bundle(thumb_file, preset_details, scene=one_layer, media=placeholder)
+        expect_rejected(lambda: add_item(thumb_file, root), "presets take no picture")
+
+        project_scene = root / "project-scene.absproj"
+        create_fake_bundle(project_scene, preset_details, thumb=None, scene=f'<scene title="Soft Glow">{layer.format(1)}</scene>')
+        expect_rejected(lambda: add_item(project_scene, root), "scene type is not preset")
+
+        unknown_kind = root / "unknown-kind.absproj"
+        create_fake_bundle(unknown_kind, dict(details, kind="tool"))
+        expect_rejected(lambda: add_item(unknown_kind, root), "unknown kind")
+
+        preset_bundle_folder = root / "presets/soft-glow"
+        (preset_bundle_folder / "thumb.webp").write_bytes(b"RIFF0000WEBP")
+        bundle_thumb_problems = check_repo(root)
+        assert any("presets have no thumb.webp" in problem for problem in bundle_thumb_problems), bundle_thumb_problems
+        (preset_bundle_folder / "thumb.webp").unlink()
+
+        preset_bundle_json = preset_bundle_folder / "item.json"
+        saved_bundle_json = preset_bundle_json.read_text(encoding="utf-8")
+        preset_bundle_file = preset_bundle_folder / "soft-glow.absproj"
+        saved_bundle_bytes = preset_bundle_file.read_bytes()
+        preset_bundle_file.write_bytes(good_bundle.read_bytes())
+        swapped = dict(json.loads(saved_bundle_json), bytes=good_bundle.stat().st_size, sha256=hashlib.sha256(good_bundle.read_bytes()).hexdigest())
+        preset_bundle_json.write_text(json.dumps(swapped, indent=1) + "\n", encoding="utf-8")
+        rebuild_index(root)
+        swapped_problems = check_repo(root)
+        assert any("is a project bundle, not a preset" in problem for problem in swapped_problems), swapped_problems
+        preset_bundle_file.write_bytes(saved_bundle_bytes)
+        preset_bundle_json.write_text(saved_bundle_json, encoding="utf-8")
+        rebuild_index(root)
+        assert check_repo(root) == []
+
         saved_index = (root / "index.json").read_text(encoding="utf-8")
         (root / "index.json").write_text('{\n "format": "absentmotion-community",\n "version": 2,\n "items": []\n}\n', encoding="utf-8")
         stale_problems = check_repo(root)
@@ -859,11 +969,11 @@ def build_parser():
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    add_parser = subparsers.add_parser("add", help="add .absproj bundles or .xml presets")
-    add_parser.add_argument("files", nargs="+", type=Path, metavar="FILE", help="bundle (.absproj) or preset (.xml) files to add")
-    add_parser.add_argument("--creator", help="creator name for presets (at most 80 characters)")
-    add_parser.add_argument("--description", help="description for presets (at most 500 characters)")
-    add_parser.add_argument("--tags", help="comma-separated tags for presets (up to 8 tags, 30 characters each)")
+    add_parser = subparsers.add_parser("add", help="add .absproj project or preset bundles, or .xml presets")
+    add_parser.add_argument("files", nargs="+", type=Path, metavar="FILE", help="project or preset bundle (.absproj) or preset (.xml) files to add")
+    add_parser.add_argument("--creator", help="creator name for .xml presets (at most 80 characters)")
+    add_parser.add_argument("--description", help="description for .xml presets (at most 500 characters)")
+    add_parser.add_argument("--tags", help="comma-separated tags for .xml presets (up to 8 tags, 30 characters each)")
 
     subparsers.add_parser("index", help="rebuild index.json from all item.json files")
     subparsers.add_parser("check", help="verify item files, metadata, paths, READMEs, and index.json")
