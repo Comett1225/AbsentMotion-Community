@@ -1,13 +1,15 @@
 # Effects
 
-Effects people made for [AbsentMotion](https://github.com/Comett1225/AbsentMotion). Each folder holds one effect (`.json`) or a pack of effects (`.amfx`).
+Effects people made for [AbsentMotion](https://github.com/Comett1225/AbsentMotion). Each folder holds one effect (`.json`) or a pack of effects (`.amfx`, AbsentMotion's own effect pack format).
 
 ## Using an effect
 
 - In the app, open **Home > Community > Effects**, tap an effect, and tap **Add**.
 - Or download the file and open it with AbsentMotion on a phone, or drop it on the AbsentMotion window on a computer.
 
-The app shows a preview and checks that the effect works on your device before adding it. Added effects are in **Effects > Added** and work like any other effect.
+The app shows a preview and checks that the effect works on your device before adding it. Added effects are in **Effects > Added**, in one folder per creator, and work like any other effect: keyframes, preview and export all work the same.
+
+If you open a project that uses a Community effect you don't have, the app tells you which pack has it and offers to install it.
 
 An added effect is only a shader and its settings. It can't read your files or go online.
 
@@ -44,14 +46,14 @@ To try it, open **Effects > Added > + Add effect** in AbsentMotion and pick the 
 | Field | Needed | What it is |
 | --- | --- | --- |
 | `id` | yes | 1 to 40 lowercase letters, digits or dashes. Different for each effect in a pack. Keep it the same when you update the effect. |
+| `author` | yes | Your creator name. The app puts your effects in a folder with this name, and the name is part of how the app tells effects apart. Keep it the same for all your effects. |
+| `version` | yes | A whole number, starting at 1. Raise it every time you share an update, so the app offers **Update** instead of adding a second copy. |
 | `name` | yes | The name shown in the Effects Library, up to 80 characters. |
 | `category` | yes | Where the effect also appears: `color`, `blur`, `distort`, `stylize`, `noise`, `repeat`, `key`, `move`, `beat`, `3d`, `text` or `other`. Anything else becomes `other`. |
 | `params` | yes | The settings, up to 32 (see below). Use `[]` for none. |
 | `sksl` | yes | The shader, up to 64 KB. Lines are separated by `\n` inside the JSON string. |
-| `description` | no | One or two sentences about what the effect does. |
-| `author` | no | Your name, shown when people add the effect. |
+| `description` | no | One or two sentences about what the effect does. If it is inspired by an effect in another app, say so here. |
 | `licence` | no | The licence people can use the effect under, for example `CC BY 4.0`. |
-| `version` | no | A whole number. Raise it when you share an update. |
 
 ### Settings
 
@@ -86,7 +88,11 @@ Keep it fast: the shader runs for every pixel of every frame. Avoid long loops.
 
 ### Packs
 
-To share several effects at once, put their `.json` files in a ZIP file (at the top level, not in a folder) and rename it from `.zip` to `.amfx`. A pack can hold up to 20 effects and must be 512 KB or smaller.
+To share several effects at once, put their `.json` files in a ZIP file (at the top level, not in a folder) and rename it from `.zip` to `.amfx`. A pack can hold up to 20 effects and must be 512 KB or smaller. Every effect in a pack needs the same `author`.
+
+### Updates and names
+
+The app knows an effect by its `author` and `id` together, so two creators can both make an effect called `fire` without getting in each other's way. To update your effect, keep the same `author` and `id` and raise `version`. People who already have it see **Update**; if they have a newer version than the file, the app asks before going back to the older one.
 
 ## Sharing your effect
 
@@ -99,7 +105,7 @@ A person checks every effect before it goes up.
 ## Rules for effects
 
 - You wrote the shader, or its licence lets you share it and you say where it came from in the description.
-- No effects taken or converted from another app's files.
+- No effects taken or converted from another app's files. Making your own effect that looks like one in another app is fine: say what inspired it.
 - One effect file is 512 KB or smaller, and a pack holds up to 20 effects.
 - Effects are shared under CC BY 4.0 per [LICENSE-ITEMS.md](../LICENSE-ITEMS.md), unless the effect's `licence` field says otherwise.
 - If something you made was shared here and you want it taken down, contact **comett1225** on Discord.

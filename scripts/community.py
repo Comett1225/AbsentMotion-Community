@@ -93,6 +93,8 @@ INDEX_FIELDS = (
     "height",
     "lengthMs",
     "minVersion",
+    "credit",
+    "contents",
 )
 
 REPO_PATH_PATTERN = re.compile(r"^[A-Za-z0-9._/-]+$")
@@ -314,6 +316,22 @@ def read_preset(path):
     return title, raw_bytes, size, sha256
 
 
+CREDIT_LIMIT = 120
+
+
+def creator_slug(author):
+    text = (author or "").strip().lower()
+    if not text:
+        return "unknown"
+    slug = re.sub(r"[^a-z0-9]+", "-", text).strip("-")[:32].strip("-")
+    return slug or "u" + hashlib.sha256(text.encode("utf-8")).hexdigest()[:8]
+
+
+def effect_contents(effects, author):
+    slug = creator_slug(author)
+    return [{"id": f"{slug}.{effect['id']}", "name": effect["name"].strip(), "version": effect.get("version", 1)} for effect in effects]
+
+
 def check_effect(source, effect):
     if not isinstance(effect, dict):
         raise Rejected(f"{source} is not an effect object")
@@ -388,9 +406,22 @@ def read_effects(path):
     return effects, raw_bytes, size, hashlib.sha256(raw_bytes).hexdigest()
 
 
-def add_effect(path, root=ROOT, creator=None, description=None, tags=None, title=None):
+def add_effect(path, root=ROOT, creator=None, description=None, tags=None, title=None, credit=None):
     effects, raw_bytes, size, sha256 = read_effects(path)
     first = effects[0]
+    authors = {(effect.get("author") or "").strip().lower() for effect in effects}
+    if len(authors) > 1:
+        raise Rejected(f"{path.name}: every effect in a pack needs the same author")
+    if authors == {""}:
+        raise Rejected(f"{path.name}: effects need an author (the creator name their folder uses)")
+    clean_credit = (credit or "").strip()
+    if len(clean_credit) > CREDIT_LIMIT:
+        raise Rejected(f"credit is longer than {CREDIT_LIMIT} characters")
+    contents = effect_contents(effects, first.get("author"))
+    taken = {entry["id"]: item for item, ids in effect_ids_in_repo(root).items() for entry in ids}
+    for entry in contents:
+        if entry["id"] in taken:
+            raise Rejected(f"{path.name}: effect {entry['id']} is already in {taken[entry['id']]}; send it as an update of that item")
     clean_title = (title or (first["name"] if len(effects) == 1 else path.stem.replace("_", " ").replace("-", " "))).strip()
     if not clean_title or len(clean_title) > TITLE_LIMIT:
         raise Rejected(f"{path.name}: title must be 1 to {TITLE_LIMIT} characters (use --title for packs)")
@@ -421,10 +452,30 @@ def add_effect(path, root=ROOT, creator=None, description=None, tags=None, title
     info["file"] = item_rel
     info["bytes"] = size
     info["sha256"] = sha256
-    info["effects"] = [effect["name"] for effect in effects]
+    if clean_credit:
+        info["credit"] = clean_credit
+    info["contents"] = contents
     (folder / "item.json").write_text(json.dumps(info, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     rebuild_index(root)
     return f"effects/{name}"
+
+
+def effect_ids_in_repo(root):
+    found = {}
+    effects_dir = root / "effects"
+    if not effects_dir.is_dir():
+        return found
+    for item_dir in sorted(effects_dir.iterdir()):
+        item_json = item_dir / "item.json"
+        if item_dir.is_dir() and item_json.is_file():
+            try:
+                info = json.loads(item_json.read_text(encoding="utf-8"))
+            except (OSError, ValueError, UnicodeDecodeError):
+                continue
+            contents = info.get("contents") if isinstance(info, dict) else None
+            if isinstance(contents, list):
+                found[f"effects/{item_dir.name}"] = [entry for entry in contents if isinstance(entry, dict) and isinstance(entry.get("id"), str)]
+    return found
 
 
 def add_bundle(path, root=ROOT):
@@ -500,18 +551,18 @@ def add_preset(path, root=ROOT, creator=None, description=None, tags=None):
     return f"presets/{name}"
 
 
-def add_item(path, root=ROOT, creator=None, description=None, tags=None, title=None):
+def add_item(path, root=ROOT, creator=None, description=None, tags=None, title=None, credit=None):
     suffix = path.suffix.lower()
     if suffix == ".absproj":
-        if creator is not None or description is not None or tags is not None or title is not None:
+        if creator is not None or description is not None or tags is not None or title is not None or credit is not None:
             raise Rejected(f"{path.name}: --creator, --description, --tags and --title only apply to .xml presets and effects")
         return add_bundle(path, root)
     if suffix == ".xml":
-        if title is not None:
-            raise Rejected(f"{path.name}: --title only applies to effects")
+        if title is not None or credit is not None:
+            raise Rejected(f"{path.name}: --title and --credit only apply to effects")
         return add_preset(path, root, creator=creator, description=description, tags=tags)
     if suffix in (".amfx", ".json"):
-        return add_effect(path, root, creator=creator, description=description, tags=tags, title=title)
+        return add_effect(path, root, creator=creator, description=description, tags=tags, title=title, credit=credit)
     raise Rejected(f"{path.name}: expected a .absproj bundle, an .xml preset, or an .amfx or .json effect")
 
 
@@ -697,7 +748,9 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
                     problems.append(f"{folder_prefix}: {rejected}")
             if expected_kind == "effect":
                 try:
-                    read_effects(target_file)
+                    effects = read_effects(target_file)[0]
+                    if info.get("contents") != effect_contents(effects, effects[0].get("author")):
+                        problems.append(f"{folder_prefix}item.json: contents must list every effect as creator.id with its name and version")
                 except Rejected as rejected:
                     problems.append(f"{folder_prefix}: {rejected}")
 
@@ -759,6 +812,13 @@ def check_repo(root=ROOT):
                     problems.append(f"stray file in {kind_dir_name}/: {entry.name}")
                 continue
             check_item_folder(root, kind_dir_name, expected_kind, entry, problems)
+
+    owners = {}
+    for item, entries in effect_ids_in_repo(root).items():
+        for entry in entries:
+            if entry["id"] in owners and owners[entry["id"]] != item:
+                problems.append(f"effect {entry['id']} is in both {owners[entry['id']]} and {item}")
+            owners.setdefault(entry["id"], item)
 
     try:
         expected_index = render_index(root)
@@ -1098,15 +1158,31 @@ def selftest():
         effect_json.write_text(json.dumps(effect), encoding="utf-8")
         assert add_item(effect_json, root, tags="Color") == "effects/simple-duotone"
         effect_item = json.loads((root / "effects/simple-duotone/item.json").read_text(encoding="utf-8"))
-        assert effect_item["kind"] == "effect" and effect_item["creator"] == "Someone" and effect_item["effects"] == ["Simple Duotone"]
+        assert effect_item["kind"] == "effect" and effect_item["creator"] == "Someone"
+        assert effect_item["contents"] == [{"id": "someone.simple-duotone", "name": "Simple Duotone", "version": 1}]
+        assert creator_slug("After Motion Z") == "after-motion-z" and creator_slug("") == "unknown" and creator_slug("مصمم").startswith("u")
+        try:
+            add_item(effect_json, root)
+            raise AssertionError("accepted the same effect twice")
+        except Rejected as rejected:
+            assert "already in effects/simple-duotone" in str(rejected), rejected
         pack = root / "Glow_Pack.amfx"
         with zipfile.ZipFile(pack, "w") as archive:
             archive.writestr("one.json", json.dumps(dict(effect, id="one", name="One")))
             archive.writestr("two.json", json.dumps(dict(effect, id="two", name="Two")))
             archive.writestr("notes.txt", "ignored")
-        assert add_item(pack, root) == "effects/glow-pack"
+        assert add_item(pack, root, credit="Inspired by Glow Maker") == "effects/glow-pack"
+        assert json.loads((root / "effects/glow-pack/item.json").read_text(encoding="utf-8"))["credit"] == "Inspired by Glow Maker"
         assert check_repo(root) == []
-        assert any(entry["kind"] == "effect" for entry in json.loads((root / "index.json").read_text(encoding="utf-8"))["items"])
+        assert any(entry["kind"] == "effect" and entry["contents"] for entry in json.loads((root / "index.json").read_text(encoding="utf-8"))["items"])
+        twin = root / "effects/glow-pack/item.json"
+        saved_twin = twin.read_text(encoding="utf-8")
+        twin_info = json.loads(saved_twin)
+        twin_info["contents"][0]["id"] = "someone.simple-duotone"
+        twin.write_text(json.dumps(twin_info, indent=1) + "\n", encoding="utf-8")
+        assert any("is in both" in problem for problem in check_repo(root))
+        twin.write_text(saved_twin, encoding="utf-8")
+        assert check_repo(root) == []
         for bad, reason in ((dict(effect, id="Bad Id"), "id must be"), (dict(effect, sksl="x" * (EFFECT_SKSL_LIMIT + 1) + "main("), "larger than 64 KB"),
                             (dict(effect, params=[{"id": "a", "type": "slider"}]), "every setting needs"), (dict(effect, sksl="no shader"), "main function")):
             effect_json.write_text(json.dumps(bad), encoding="utf-8")
@@ -1115,6 +1191,12 @@ def selftest():
                 raise AssertionError(f"accepted {reason}")
             except Rejected as rejected:
                 assert reason in str(rejected), rejected
+        effect_json.write_text(json.dumps({k: v for k, v in effect.items() if k != "author"} | {"id": "no-author"}), encoding="utf-8")
+        try:
+            add_item(effect_json, root)
+            raise AssertionError("accepted an effect without an author")
+        except Rejected as rejected:
+            assert "need an author" in str(rejected), rejected
         big = root / "big.amfx"
         with zipfile.ZipFile(big, "w") as archive:
             for number in range(EFFECT_PACK_LIMIT + 1):
@@ -1142,6 +1224,7 @@ def build_parser():
     add_parser.add_argument("--description", help="description for .xml presets and effects (at most 500 characters)")
     add_parser.add_argument("--tags", help="comma-separated tags for .xml presets and effects (up to 8 tags, 30 characters each)")
     add_parser.add_argument("--title", help="title for an effect pack (a single effect uses its name)")
+    add_parser.add_argument("--credit", help="credit line for an effect pack, for example 'Inspired by After Motion Z' (at most 120 characters)")
 
     subparsers.add_parser("index", help="rebuild index.json from all item.json files")
     subparsers.add_parser("check", help="verify item files, metadata, paths, READMEs, and index.json")
@@ -1186,6 +1269,7 @@ def main():
                     description=args.description,
                     tags=args.tags,
                     title=args.title,
+                    credit=args.credit,
                 )
                 print(f"added {added_folder}")
             except Rejected as rejected:
