@@ -1,0 +1,28 @@
+{
+ "kind": "effect",
+ "name": "fun-pack",
+ "title": "Fun Pack",
+ "creator": "AbsentMotion",
+ "description": "Jelly Wobble makes a layer wobble like jelly and Candy Glow paints it in shifting rainbow colors.",
+ "tags": [
+  "Distort",
+  "Color",
+  "Fun"
+ ],
+ "added": "2026-11-21T23:03:04Z",
+ "file": "effects/fun-pack/fun-pack.abmfx",
+ "bytes": 1333,
+ "sha256": "61038b238af4ca330bacd004697fbe4f7067c20c87b84dec008efa9e6338d4d2",
+ "contents": [
+  {
+   "id": "absentmotion.jelly-wobble",
+   "name": "Jelly Wobble",
+   "version": 1
+  },
+  {
+   "id": "absentmotion.candy-glow",
+   "name": "Candy Glow",
+   "version": 1
+  }
+ ]
+}
