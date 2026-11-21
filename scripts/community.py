@@ -14,6 +14,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 BUNDLE_LIMIT = 20 * 1024 * 1024
 PRESET_LIMIT = 1 * 1024 * 1024
+EFFECT_LIMIT = 512 * 1024
+EFFECT_SKSL_LIMIT = 64 * 1024
+EFFECT_PARAM_LIMIT = 32
+EFFECT_PACK_LIMIT = 20
+EFFECT_CATEGORIES = frozenset({"color", "blur", "distort", "stylize", "noise", "repeat", "key", "move", "beat", "3d", "text", "other"})
+EFFECT_PARAM_TYPES = frozenset({"float", "angle", "point", "color", "switch", "choice", "text"})
 MANIFEST_LIMIT = 1 * 1024 * 1024
 THUMB_LIMIT = 4 * 1024 * 1024
 ENTRY_COUNT_LIMIT = 2000
@@ -32,11 +38,13 @@ INDEX_VERSION = 2
 KIND_FOLDERS = {
     "bundles": "bundle",
     "presets": "preset",
+    "effects": "effect",
 }
 REQUIRED_READMES = (
     "README.md",
     "bundles/README.md",
     "presets/README.md",
+    "effects/README.md",
 )
 LAYER_TAGS = frozenset({
     "shape",
@@ -89,6 +97,7 @@ INDEX_FIELDS = (
 
 REPO_PATH_PATTERN = re.compile(r"^[A-Za-z0-9._/-]+$")
 SLUG_PATTERN = re.compile(r"^[a-z0-9-]{1,48}$")
+EFFECT_ID_PATTERN = re.compile(r"^[a-z0-9-]{1,40}$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}Z)?$")
 
@@ -305,6 +314,119 @@ def read_preset(path):
     return title, raw_bytes, size, sha256
 
 
+def check_effect(source, effect):
+    if not isinstance(effect, dict):
+        raise Rejected(f"{source} is not an effect object")
+    effect_id = effect.get("id")
+    if not isinstance(effect_id, str) or not EFFECT_ID_PATTERN.fullmatch(effect_id):
+        raise Rejected(f"{source}: id must be 1 to 40 lowercase letters, digits or dashes")
+    name = effect.get("name")
+    if not isinstance(name, str) or not name.strip() or len(name) > TITLE_LIMIT:
+        raise Rejected(f"{source}: name must be a non-empty string of at most {TITLE_LIMIT} characters")
+    if not isinstance(effect.get("category"), str):
+        raise Rejected(f"{source}: category must be a string")
+    sksl = effect.get("sksl")
+    if not isinstance(sksl, str) or "main(" not in sksl:
+        raise Rejected(f"{source}: sksl must be a shader with a main function")
+    if len(sksl.encode("utf-8")) > EFFECT_SKSL_LIMIT:
+        raise Rejected(f"{source}: sksl is larger than 64 KB")
+    params = effect.get("params")
+    if not isinstance(params, list) or len(params) > EFFECT_PARAM_LIMIT:
+        raise Rejected(f"{source}: params must be a list of at most {EFFECT_PARAM_LIMIT} settings")
+    seen = set()
+    for param in params:
+        if not isinstance(param, dict) or not isinstance(param.get("id"), str) or param.get("type") not in EFFECT_PARAM_TYPES:
+            raise Rejected(f"{source}: every setting needs an id and a type ({', '.join(sorted(EFFECT_PARAM_TYPES))})")
+        if param["id"] in seen:
+            raise Rejected(f"{source}: setting {param['id']!r} appears twice")
+        seen.add(param["id"])
+        if param["type"] == "choice":
+            options = param.get("options")
+            if not isinstance(options, list) or not options or not is_non_bool_int(param.get("default")) or not 0 <= param["default"] < len(options):
+                raise Rejected(f"{source}: choice {param['id']!r} needs options and a default index")
+    if "version" in effect and (not is_non_bool_int(effect["version"]) or effect["version"] < 1):
+        raise Rejected(f"{source}: version must be a positive integer")
+    return effect
+
+
+def read_effects(path):
+    if not path.is_file():
+        raise Rejected(f"{path} is not a file")
+    size = path.stat().st_size
+    if size > EFFECT_LIMIT:
+        raise Rejected(f"{path.name} is {size / 1024:.0f} KB; the limit is 512 KB")
+    raw_bytes = path.read_bytes()
+    suffix = path.suffix.lower()
+    effects = []
+    if suffix == ".json":
+        try:
+            effects.append(check_effect(path.name, json.loads(raw_bytes.decode("utf-8"))))
+        except (ValueError, UnicodeDecodeError) as error:
+            raise Rejected(f"{path.name} is not valid JSON ({error})")
+    elif suffix == ".amfx":
+        try:
+            with zipfile.ZipFile(path) as pack:
+                entries = [info for info in pack.infolist() if not info.is_dir() and "/" not in info.filename and info.filename.lower().endswith(".json")]
+                if len(pack.infolist()) > ENTRY_COUNT_LIMIT or sum(info.file_size for info in entries) > 4 * EFFECT_LIMIT:
+                    raise Rejected(f"{path.name} unpacks too large")
+                if not entries:
+                    raise Rejected(f"{path.name} has no effect .json files at its top level")
+                if len(entries) > EFFECT_PACK_LIMIT:
+                    raise Rejected(f"{path.name} has {len(entries)} effects; the limit is {EFFECT_PACK_LIMIT}")
+                for info in entries:
+                    try:
+                        effects.append(check_effect(f"{path.name}/{info.filename}", json.loads(pack.read(info).decode("utf-8"))))
+                    except (ValueError, UnicodeDecodeError) as error:
+                        raise Rejected(f"{path.name}/{info.filename} is not valid JSON ({error})")
+        except ZIP_ERRORS as error:
+            raise Rejected(f"{path.name} is not a readable .amfx pack ({error})")
+    else:
+        raise Rejected(f"{path.name}: effects are .amfx packs or .json files")
+    ids = [effect["id"] for effect in effects]
+    if len(set(ids)) != len(ids):
+        raise Rejected(f"{path.name} has two effects with the same id")
+    return effects, raw_bytes, size, hashlib.sha256(raw_bytes).hexdigest()
+
+
+def add_effect(path, root=ROOT, creator=None, description=None, tags=None, title=None):
+    effects, raw_bytes, size, sha256 = read_effects(path)
+    first = effects[0]
+    clean_title = (title or (first["name"] if len(effects) == 1 else path.stem.replace("_", " ").replace("-", " "))).strip()
+    if not clean_title or len(clean_title) > TITLE_LIMIT:
+        raise Rejected(f"{path.name}: title must be 1 to {TITLE_LIMIT} characters (use --title for packs)")
+    clean_creator = (creator if creator is not None else first.get("author") or "").strip()
+    if len(clean_creator) > CREATOR_LIMIT:
+        raise Rejected(f"creator is longer than {CREATOR_LIMIT} characters")
+    clean_description = (description if description is not None else (first.get("description") or "" if len(effects) == 1 else "")).strip()
+    if len(clean_description) > DESCRIPTION_LIMIT:
+        raise Rejected(f"description is longer than {DESCRIPTION_LIMIT} characters")
+    clean_tags = parse_tags_argument(tags)
+
+    effects_dir = root / "effects"
+    effects_dir.mkdir(parents=True, exist_ok=True)
+    name = unique_slug(effects_dir, clean_title)
+    folder = effects_dir / name
+    folder.mkdir(parents=True)
+    item_rel = f"effects/{name}/{name}{path.suffix.lower()}"
+    (root / item_rel).write_bytes(raw_bytes)
+
+    info = {"kind": "effect", "name": name, "title": clean_title}
+    if clean_creator:
+        info["creator"] = clean_creator
+    if clean_description:
+        info["description"] = clean_description
+    if clean_tags:
+        info["tags"] = clean_tags
+    info["added"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    info["file"] = item_rel
+    info["bytes"] = size
+    info["sha256"] = sha256
+    info["effects"] = [effect["name"] for effect in effects]
+    (folder / "item.json").write_text(json.dumps(info, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    rebuild_index(root)
+    return f"effects/{name}"
+
+
 def add_bundle(path, root=ROOT):
     kind, details, thumb_bytes, size, sha256 = read_bundle(path)
     kind_dir_name = "presets" if kind == "preset" else "bundles"
@@ -378,15 +500,19 @@ def add_preset(path, root=ROOT, creator=None, description=None, tags=None):
     return f"presets/{name}"
 
 
-def add_item(path, root=ROOT, creator=None, description=None, tags=None):
+def add_item(path, root=ROOT, creator=None, description=None, tags=None, title=None):
     suffix = path.suffix.lower()
     if suffix == ".absproj":
-        if creator is not None or description is not None or tags is not None:
-            raise Rejected(f"{path.name}: --creator, --description, and --tags only apply to .xml presets")
+        if creator is not None or description is not None or tags is not None or title is not None:
+            raise Rejected(f"{path.name}: --creator, --description, --tags and --title only apply to .xml presets and effects")
         return add_bundle(path, root)
     if suffix == ".xml":
+        if title is not None:
+            raise Rejected(f"{path.name}: --title only applies to effects")
         return add_preset(path, root, creator=creator, description=description, tags=tags)
-    raise Rejected(f"{path.name}: expected a .absproj bundle or .xml preset")
+    if suffix in (".amfx", ".json"):
+        return add_effect(path, root, creator=creator, description=description, tags=tags, title=title)
+    raise Rejected(f"{path.name}: expected a .absproj bundle, an .xml preset, or an .amfx or .json effect")
 
 
 def build_index_data(root=ROOT):
@@ -480,7 +606,7 @@ def check_item_metadata(info, expected_kind, folder_prefix, problems):
         if not is_non_bool_int(min_version) or min_version < 1:
             problems.append(f"{folder_prefix}item.json: minVersion must be a positive integer")
 
-    if expected_kind == "preset":
+    if expected_kind in ("preset", "effect"):
         for key in ("width", "height", "lengthMs"):
             if key in info:
                 problems.append(f"{folder_prefix}item.json: {key} is only allowed for bundles")
@@ -514,14 +640,14 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
 
     file_rel = info.get("file")
     preset_bundle = expected_kind == "preset" and isinstance(file_rel, str) and file_rel.endswith(".absproj")
-    limit = PRESET_LIMIT if expected_kind == "preset" and not preset_bundle else BUNDLE_LIMIT
+    limit = EFFECT_LIMIT if expected_kind == "effect" else PRESET_LIMIT if expected_kind == "preset" and not preset_bundle else BUNDLE_LIMIT
 
     recorded_bytes = info.get("bytes")
     if not is_non_bool_int(recorded_bytes) or recorded_bytes < 0:
         problems.append(f"{folder_prefix}item.json: bytes must be a non-negative integer")
         recorded_bytes = None
     elif recorded_bytes > limit:
-        problems.append(f"{folder_prefix}item.json: bytes exceeds {limit >> 20} MB limit")
+        problems.append(f"{folder_prefix}item.json: bytes exceeds {f'{limit >> 20} MB' if limit >= 1 << 20 else f'{limit >> 10} KB'} limit")
 
     recorded_sha = info.get("sha256")
     if not isinstance(recorded_sha, str) or not SHA256_PATTERN.fullmatch(recorded_sha):
@@ -539,6 +665,8 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
             problems.append(
                 f"{folder_prefix}item.json: preset file must be {folder_prefix}{name}.xml or {folder_prefix}{name}.absproj"
             )
+        elif expected_kind == "effect" and file_rel not in (f"{folder_prefix}{name}.amfx", f"{folder_prefix}{name}.json"):
+            problems.append(f"{folder_prefix}item.json: effect file must be {folder_prefix}{name}.amfx or {folder_prefix}{name}.json")
 
         target_file = root / file_rel
         if target_file.parent == folder:
@@ -555,7 +683,7 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
                     f"{folder_prefix}: size mismatch for {file_rel} (item.json has {recorded_bytes}, file has {actual_bytes})"
                 )
             if actual_bytes > limit:
-                problems.append(f"{folder_prefix}: {file_rel} exceeds {limit >> 20} MB limit ({actual_bytes} bytes)")
+                problems.append(f"{folder_prefix}: {file_rel} exceeds {f'{limit >> 20} MB' if limit >= 1 << 20 else f'{limit >> 10} KB'} limit ({actual_bytes} bytes)")
             actual_sha = hashlib.sha256(target_file.read_bytes()).hexdigest()
             if recorded_sha is not None and actual_sha != recorded_sha:
                 problems.append(f"{folder_prefix}: sha256 mismatch for {file_rel}")
@@ -567,16 +695,21 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
                         problems.append(f"{folder_prefix}: {file_rel} is a project bundle, not a preset")
                 except Rejected as rejected:
                     problems.append(f"{folder_prefix}: {rejected}")
+            if expected_kind == "effect":
+                try:
+                    read_effects(target_file)
+                except Rejected as rejected:
+                    problems.append(f"{folder_prefix}: {rejected}")
 
     thumb_rel = info.get("thumbnail")
     has_valid_thumb = False
     if expected_kind == "bundle" and thumb_rel is None:
         problems.append(f"{folder_prefix}item.json: bundles must have a thumbnail")
-    if expected_kind == "preset":
+    if expected_kind in ("preset", "effect"):
         if thumb_rel is not None:
-            problems.append(f"{folder_prefix}item.json: presets have no thumbnail; the app draws the picture from the preset")
+            problems.append(f"{folder_prefix}item.json: {expected_kind}s have no thumbnail; the app draws the picture itself")
         if (folder / "thumb.webp").exists():
-            problems.append(f"{folder_prefix}: presets have no thumb.webp; the app draws the picture from the preset")
+            problems.append(f"{folder_prefix}: {expected_kind}s have no thumb.webp; the app draws the picture itself")
     elif thumb_rel is not None:
         thumb_error = validate_repo_path(thumb_rel, folder_prefix)
         if thumb_error:
@@ -959,6 +1092,40 @@ def selftest():
         (root / "index.json").write_text(saved_index, encoding="utf-8")
         assert check_repo(root) == []
 
+        effect = {"id": "simple-duotone", "name": "Simple Duotone", "category": "color", "author": "Someone", "description": "Two colors", "version": 1,
+                  "params": [{"id": "amount", "type": "float", "default": 1, "min": 0, "max": 1}], "sksl": "uniform shader image;\nhalf4 main(float2 p) { return image.eval(p); }\n"}
+        effect_json = root / "duotone.json"
+        effect_json.write_text(json.dumps(effect), encoding="utf-8")
+        assert add_item(effect_json, root, tags="Color") == "effects/simple-duotone"
+        effect_item = json.loads((root / "effects/simple-duotone/item.json").read_text(encoding="utf-8"))
+        assert effect_item["kind"] == "effect" and effect_item["creator"] == "Someone" and effect_item["effects"] == ["Simple Duotone"]
+        pack = root / "Glow_Pack.amfx"
+        with zipfile.ZipFile(pack, "w") as archive:
+            archive.writestr("one.json", json.dumps(dict(effect, id="one", name="One")))
+            archive.writestr("two.json", json.dumps(dict(effect, id="two", name="Two")))
+            archive.writestr("notes.txt", "ignored")
+        assert add_item(pack, root) == "effects/glow-pack"
+        assert check_repo(root) == []
+        assert any(entry["kind"] == "effect" for entry in json.loads((root / "index.json").read_text(encoding="utf-8"))["items"])
+        for bad, reason in ((dict(effect, id="Bad Id"), "id must be"), (dict(effect, sksl="x" * (EFFECT_SKSL_LIMIT + 1) + "main("), "larger than 64 KB"),
+                            (dict(effect, params=[{"id": "a", "type": "slider"}]), "every setting needs"), (dict(effect, sksl="no shader"), "main function")):
+            effect_json.write_text(json.dumps(bad), encoding="utf-8")
+            try:
+                add_item(effect_json, root)
+                raise AssertionError(f"accepted {reason}")
+            except Rejected as rejected:
+                assert reason in str(rejected), rejected
+        big = root / "big.amfx"
+        with zipfile.ZipFile(big, "w") as archive:
+            for number in range(EFFECT_PACK_LIMIT + 1):
+                archive.writestr(f"e{number}.json", json.dumps(dict(effect, id=f"e{number}")))
+        try:
+            add_item(big, root, title="Big")
+            raise AssertionError("accepted a pack with too many effects")
+        except Rejected as rejected:
+            assert "the limit is" in str(rejected), rejected
+        assert check_repo(root) == []
+
     print("selftest passed")
 
 
@@ -969,11 +1136,12 @@ def build_parser():
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    add_parser = subparsers.add_parser("add", help="add .absproj project or preset bundles, or .xml presets")
-    add_parser.add_argument("files", nargs="+", type=Path, metavar="FILE", help="project or preset bundle (.absproj) or preset (.xml) files to add")
-    add_parser.add_argument("--creator", help="creator name for .xml presets (at most 80 characters)")
-    add_parser.add_argument("--description", help="description for .xml presets (at most 500 characters)")
-    add_parser.add_argument("--tags", help="comma-separated tags for .xml presets (up to 8 tags, 30 characters each)")
+    add_parser = subparsers.add_parser("add", help="add .absproj project or preset bundles, .xml presets, or .amfx and .json effects")
+    add_parser.add_argument("files", nargs="+", type=Path, metavar="FILE", help="project or preset bundle (.absproj), preset (.xml), or effect (.amfx pack or .json) files to add")
+    add_parser.add_argument("--creator", help="creator name for .xml presets and effects (at most 80 characters; effects default to their author)")
+    add_parser.add_argument("--description", help="description for .xml presets and effects (at most 500 characters)")
+    add_parser.add_argument("--tags", help="comma-separated tags for .xml presets and effects (up to 8 tags, 30 characters each)")
+    add_parser.add_argument("--title", help="title for an effect pack (a single effect uses its name)")
 
     subparsers.add_parser("index", help="rebuild index.json from all item.json files")
     subparsers.add_parser("check", help="verify item files, metadata, paths, READMEs, and index.json")
@@ -1017,6 +1185,7 @@ def main():
                     creator=args.creator,
                     description=args.description,
                     tags=args.tags,
+                    title=args.title,
                 )
                 print(f"added {added_folder}")
             except Rejected as rejected:
