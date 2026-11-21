@@ -381,7 +381,7 @@ def read_effects(path):
             effects.append(check_effect(path.name, json.loads(raw_bytes.decode("utf-8"))))
         except (ValueError, UnicodeDecodeError) as error:
             raise Rejected(f"{path.name} is not valid JSON ({error})")
-    elif suffix == ".amfx":
+    elif suffix == ".abmfx":
         try:
             with zipfile.ZipFile(path) as pack:
                 entries = [info for info in pack.infolist() if not info.is_dir() and "/" not in info.filename and info.filename.lower().endswith(".json")]
@@ -397,9 +397,9 @@ def read_effects(path):
                     except (ValueError, UnicodeDecodeError) as error:
                         raise Rejected(f"{path.name}/{info.filename} is not valid JSON ({error})")
         except ZIP_ERRORS as error:
-            raise Rejected(f"{path.name} is not a readable .amfx pack ({error})")
+            raise Rejected(f"{path.name} is not a readable .abmfx pack ({error})")
     else:
-        raise Rejected(f"{path.name}: effects are .amfx packs or .json files")
+        raise Rejected(f"{path.name}: effects are .abmfx packs or .json files")
     ids = [effect["id"] for effect in effects]
     if len(set(ids)) != len(ids):
         raise Rejected(f"{path.name} has two effects with the same id")
@@ -561,9 +561,9 @@ def add_item(path, root=ROOT, creator=None, description=None, tags=None, title=N
         if title is not None or credit is not None:
             raise Rejected(f"{path.name}: --title and --credit only apply to effects")
         return add_preset(path, root, creator=creator, description=description, tags=tags)
-    if suffix in (".amfx", ".json"):
+    if suffix in (".abmfx", ".json"):
         return add_effect(path, root, creator=creator, description=description, tags=tags, title=title, credit=credit)
-    raise Rejected(f"{path.name}: expected a .absproj bundle, an .xml preset, or an .amfx or .json effect")
+    raise Rejected(f"{path.name}: expected a .absproj bundle, an .xml preset, or an .abmfx or .json effect")
 
 
 def build_index_data(root=ROOT):
@@ -716,8 +716,8 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
             problems.append(
                 f"{folder_prefix}item.json: preset file must be {folder_prefix}{name}.xml or {folder_prefix}{name}.absproj"
             )
-        elif expected_kind == "effect" and file_rel not in (f"{folder_prefix}{name}.amfx", f"{folder_prefix}{name}.json"):
-            problems.append(f"{folder_prefix}item.json: effect file must be {folder_prefix}{name}.amfx or {folder_prefix}{name}.json")
+        elif expected_kind == "effect" and file_rel not in (f"{folder_prefix}{name}.abmfx", f"{folder_prefix}{name}.json"):
+            problems.append(f"{folder_prefix}item.json: effect file must be {folder_prefix}{name}.abmfx or {folder_prefix}{name}.json")
 
         target_file = root / file_rel
         if target_file.parent == folder:
@@ -1166,7 +1166,7 @@ def selftest():
             raise AssertionError("accepted the same effect twice")
         except Rejected as rejected:
             assert "already in effects/simple-duotone" in str(rejected), rejected
-        pack = root / "Glow_Pack.amfx"
+        pack = root / "Glow_Pack.abmfx"
         with zipfile.ZipFile(pack, "w") as archive:
             archive.writestr("one.json", json.dumps(dict(effect, id="one", name="One")))
             archive.writestr("two.json", json.dumps(dict(effect, id="two", name="Two")))
@@ -1197,7 +1197,7 @@ def selftest():
             raise AssertionError("accepted an effect without an author")
         except Rejected as rejected:
             assert "need an author" in str(rejected), rejected
-        big = root / "big.amfx"
+        big = root / "big.abmfx"
         with zipfile.ZipFile(big, "w") as archive:
             for number in range(EFFECT_PACK_LIMIT + 1):
                 archive.writestr(f"e{number}.json", json.dumps(dict(effect, id=f"e{number}")))
@@ -1218,8 +1218,8 @@ def build_parser():
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    add_parser = subparsers.add_parser("add", help="add .absproj project or preset bundles, .xml presets, or .amfx and .json effects")
-    add_parser.add_argument("files", nargs="+", type=Path, metavar="FILE", help="project or preset bundle (.absproj), preset (.xml), or effect (.amfx pack or .json) files to add")
+    add_parser = subparsers.add_parser("add", help="add .absproj project or preset bundles, .xml presets, or .abmfx and .json effects")
+    add_parser.add_argument("files", nargs="+", type=Path, metavar="FILE", help="project or preset bundle (.absproj), preset (.xml), or effect (.abmfx pack or .json) files to add")
     add_parser.add_argument("--creator", help="creator name for .xml presets and effects (at most 80 characters; effects default to their author)")
     add_parser.add_argument("--description", help="description for .xml presets and effects (at most 500 characters)")
     add_parser.add_argument("--tags", help="comma-separated tags for .xml presets and effects (up to 8 tags, 30 characters each)")

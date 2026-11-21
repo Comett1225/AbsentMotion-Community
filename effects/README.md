@@ -1,6 +1,6 @@
 # Effects
 
-Effects people made for [AbsentMotion](https://github.com/Comett1225/AbsentMotion). Each folder holds one effect (`.json`) or a pack of effects (`.amfx`, AbsentMotion's own effect pack format).
+Effects people made for [AbsentMotion](https://github.com/Comett1225/AbsentMotion). Each folder holds one effect (`.json`) or a pack of effects (`.abmfx`, AbsentMotion's own effect pack format).
 
 ## Using an effect
 
@@ -88,7 +88,7 @@ Keep it fast: the shader runs for every pixel of every frame. Avoid long loops.
 
 ### Packs
 
-To share several effects at once, put their `.json` files in a ZIP file (at the top level, not in a folder) and rename it from `.zip` to `.amfx`. A pack can hold up to 20 effects and must be 512 KB or smaller. Every effect in a pack needs the same `author`.
+To share several effects at once, put their `.json` files in a ZIP file (at the top level, not in a folder) and rename it from `.zip` to `.abmfx`. A pack can hold up to 20 effects and must be 512 KB or smaller. Every effect in a pack needs the same `author`.
 
 ### Updates and names
 
@@ -97,7 +97,7 @@ The app knows an effect by its `author` and `id` together, so two creators can b
 ## Sharing your effect
 
 1. Test it in AbsentMotion first. If the app says **Doesn't work on this device**, the shader has a mistake.
-2. Upload the `.json` or `.amfx` file to any file hosting website (an anonymous one, Google Drive or MEGA). Anyone with the link must be able to download it.
+2. Upload the `.json` or `.abmfx` file to any file hosting website (an anonymous one, Google Drive or MEGA). Anyone with the link must be able to download it.
 3. Send the link with the [Community form](https://forms.gle/Xyn4TiKNJ9kUPQ7x8) and choose **Effect**.
 
 A person checks every effect before it goes up.

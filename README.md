@@ -29,7 +29,7 @@ Only the maintainer adds items to this repository. Everything is checked by a pe
 
 - Bundles must be 20 MB or smaller.
 - Preset bundles must be 20 MB or smaller. Older `.xml` presets must be 1 MB or smaller.
-- Effect files (`.json` or `.amfx` packs) must be 512 KB or smaller. No effects taken or converted from another app's files.
+- Effect files (`.json` or `.abmfx` packs) must be 512 KB or smaller. No effects taken or converted from another app's files.
 - You made the item, or you credit who made it in the description (someone else's edit, project, preset or art is fine with credit). Paid assets are not.
 - If something you made was shared here and you want it taken down, contact **comett1225** on Discord.
 - Items are shared under CC BY 4.0 per [LICENSE-ITEMS.md](LICENSE-ITEMS.md).
@@ -58,7 +58,7 @@ presets/<name>/<name>.xml       older layer preset (at most 1 MB)
 presets/<name>/item.json        preset details
 effects/README.md               how to make and share effects
 effects/<name>/<name>.json      one effect (at most 512 KB)
-effects/<name>/<name>.amfx      effect pack, a ZIP of .json effects (at most 512 KB)
+effects/<name>/<name>.abmfx      effect pack, a ZIP of .json effects (at most 512 KB)
 effects/<name>/item.json        effect details
 scripts/community.py            maintainer script
 .github/workflows/check.yml     CI workflow
@@ -73,7 +73,7 @@ python3 scripts/community.py check
 python3 scripts/community.py selftest
 ```
 
-- `add` adds `.absproj` files or `.xml` presets and updates `index.json`. A project bundle goes in `bundles/` and a preset bundle in `presets/`. A preset bundle must have one layer in a preset scene and no picture. `.xml` presets also accept `--creator`, `--description`, and `--tags`; preset bundles carry their own details. `.amfx` and `.json` effects go in `effects/`; they take `--creator` (default: the effect's author), `--description`, `--tags`, and `--title` (needed for a pack whose file name is not a good title).
+- `add` adds `.absproj` files or `.xml` presets and updates `index.json`. A project bundle goes in `bundles/` and a preset bundle in `presets/`. A preset bundle must have one layer in a preset scene and no picture. `.xml` presets also accept `--creator`, `--description`, and `--tags`; preset bundles carry their own details. `.abmfx` and `.json` effects go in `effects/`; they take `--creator` (default: the effect's author), `--description`, `--tags`, and `--title` (needed for a pack whose file name is not a good title).
 - `index` rebuilds `index.json` from every `item.json`.
 - `check` verifies files, sizes, SHA-256 hashes, paths, limits, READMEs, and `index.json`, checks that every preset has one layer, re-checks every effect file (ids, names, settings, shader size and pack limits), and rejects a preset or effect folder with a `thumb.webp` or a `thumbnail` in its `item.json`.
 - `selftest` runs built-in tests in temporary folders.
