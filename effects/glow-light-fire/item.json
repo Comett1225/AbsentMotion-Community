@@ -1,0 +1,104 @@
+{
+ "kind": "effect",
+ "name": "glow-light-fire",
+ "title": "Glow, Light & Fire",
+ "creator": "Duplex",
+ "description": "Glows, light rays, fire, lightning, aurora, bubbles, stars and radial blurs.",
+ "tags": [
+  "Glow",
+  "Light",
+  "Fire",
+  "Stylize"
+ ],
+ "added": "2026-11-23T03:42:14Z",
+ "file": "effects/glow-light-fire/glow-light-fire.abmfx",
+ "bytes": 30495,
+ "sha256": "c26cb2b07bce2f061526d6c77c2a59b20330bbda764612188fae76dda31f0a2e",
+ "contents": [
+  {
+   "id": "duplex.dd-aurora",
+   "name": "Aurora",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-gold-glow",
+   "name": "Gold Glow",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-fire-embers",
+   "name": "Fire and Embers",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-starfield",
+   "name": "Starfield",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-eye-glow",
+   "name": "Eye Glow",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-light-sweep",
+   "name": "Light Sweep",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-flame-aura",
+   "name": "Flame Aura",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-radial-blur",
+   "name": "Radial Blur",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-ray-blur",
+   "name": "Ray Blur",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-light-rays",
+   "name": "Light Rays",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-glow-rings",
+   "name": "Glow Rings",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-prism-glow",
+   "name": "Prism Glow",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-bright-ray-glow",
+   "name": "Bright Ray Glow",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-dark-glow",
+   "name": "Dark Glow",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-soap-bubbles",
+   "name": "Soap Bubbles",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-electric-arc",
+   "name": "Electric Arc",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-soft-glow",
+   "name": "Soft Glow",
+   "version": 1
+  }
+ ]
+}

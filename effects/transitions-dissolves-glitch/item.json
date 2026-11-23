@@ -1,0 +1,113 @@
+{
+ "kind": "effect",
+ "name": "transitions-dissolves-glitch",
+ "title": "Transitions, Dissolves & Glitch",
+ "creator": "Duplex",
+ "description": "Wipes, dissolves, shatters and disintegrations for transitions, plus glitch and old-TV looks.",
+ "tags": [
+  "Transition",
+  "Dissolve",
+  "Glitch"
+ ],
+ "added": "2026-11-23T03:42:14Z",
+ "file": "effects/transitions-dissolves-glitch/transitions-dissolves-glitch.abmfx",
+ "bytes": 35943,
+ "sha256": "929a78964ea23bc65c3cce1d690811dd941ee610ce17ffe075cd89ab19541313",
+ "contents": [
+  {
+   "id": "duplex.dd-dissolve",
+   "name": "Dissolve",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-shatter",
+   "name": "Shatter",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-shatter-text",
+   "name": "Text Shatter",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-text-explode",
+   "name": "Text Explosion",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-tv-off",
+   "name": "TV Switch-Off",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-dust-dissolve",
+   "name": "Dust Dissolve",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-burn-wipe",
+   "name": "Burn Wipe",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-dust-wipe",
+   "name": "Dust Wipe",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-glitch",
+   "name": "Glitch",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-glitch-styles",
+   "name": "Glitch Styles",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-pixel-wipe",
+   "name": "Pixel Wipe",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-halftone-wipe",
+   "name": "Halftone Transition",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-scatter-transition",
+   "name": "Scatter Transition",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-tv-glitch",
+   "name": "TV Glitch",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-card-flip-grid",
+   "name": "Card Flip Grid",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-sand-disintegrate",
+   "name": "Sand Disintegrate",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-ember-disintegrate",
+   "name": "Ember Disintegrate",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-smoke-dissolve",
+   "name": "Smoke Dissolve",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-outline-draw",
+   "name": "Outline Draw",
+   "version": 1
+  }
+ ]
+}

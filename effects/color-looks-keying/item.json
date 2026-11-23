@@ -1,0 +1,118 @@
+{
+ "kind": "effect",
+ "name": "color-looks-keying",
+ "title": "Color, Looks & Keying",
+ "creator": "Duplex",
+ "description": "Color grades and looks, gradients and fills, black bars, sharpen, paper cutout and low-poly styles, and color, luma and center keys.",
+ "tags": [
+  "Color",
+  "Key",
+  "Stylize"
+ ],
+ "added": "2026-11-23T03:42:14Z",
+ "file": "effects/color-looks-keying/color-looks-keying.abmfx",
+ "bytes": 38789,
+ "sha256": "764e33ce1d5044fcfa7d70ffe573c518f12b237fb67e1042f4f4430866e7f9ef",
+ "contents": [
+  {
+   "id": "duplex.dd-black-bars",
+   "name": "Black Bars",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-tracking-boxes",
+   "name": "Tracking Boxes",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-palette-cycle",
+   "name": "Palette Cycle",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-gaussian-splatting",
+   "name": "Soft Blob Mosaic",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-photo-grade",
+   "name": "Photo Grade",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-low-quality",
+   "name": "Low Quality Video",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-papercut",
+   "name": "Paper Cutout",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-low-poly",
+   "name": "Low Poly Trace",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-rainbow-stripes",
+   "name": "Rainbow Stripes",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-sharpen",
+   "name": "Sharpen",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-knockout-look",
+   "name": "Knockout Look",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-chroma-center-key",
+   "name": "Chroma and Center Key",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-chroma-luma-key",
+   "name": "Chroma and Luma Key",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-body-cutout",
+   "name": "Oval Spotlight Outline",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-code-grade",
+   "name": "Code Color Grade",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-film-look",
+   "name": "Film Look",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-teal-orange",
+   "name": "Teal and Orange",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-color-cycle",
+   "name": "Color Cycle",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-3color-gradient",
+   "name": "Three Color Gradient",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-solid-color",
+   "name": "Color Fill",
+   "version": 1
+  }
+ ]
+}

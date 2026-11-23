@@ -4,6 +4,572 @@
  "items": [
   {
    "kind": "effect",
+   "name": "transitions-dissolves-glitch",
+   "title": "Transitions, Dissolves & Glitch",
+   "creator": "Duplex",
+   "description": "Wipes, dissolves, shatters and disintegrations for transitions, plus glitch and old-TV looks.",
+   "tags": [
+    "Transition",
+    "Dissolve",
+    "Glitch"
+   ],
+   "added": "2026-11-23T03:42:14Z",
+   "file": "effects/transitions-dissolves-glitch/transitions-dissolves-glitch.abmfx",
+   "bytes": 35943,
+   "sha256": "929a78964ea23bc65c3cce1d690811dd941ee610ce17ffe075cd89ab19541313",
+   "contents": [
+    {
+     "id": "duplex.dd-dissolve",
+     "name": "Dissolve",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-shatter",
+     "name": "Shatter",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-shatter-text",
+     "name": "Text Shatter",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-text-explode",
+     "name": "Text Explosion",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-tv-off",
+     "name": "TV Switch-Off",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-dust-dissolve",
+     "name": "Dust Dissolve",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-burn-wipe",
+     "name": "Burn Wipe",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-dust-wipe",
+     "name": "Dust Wipe",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-glitch",
+     "name": "Glitch",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-glitch-styles",
+     "name": "Glitch Styles",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-pixel-wipe",
+     "name": "Pixel Wipe",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-halftone-wipe",
+     "name": "Halftone Transition",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-scatter-transition",
+     "name": "Scatter Transition",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-tv-glitch",
+     "name": "TV Glitch",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-card-flip-grid",
+     "name": "Card Flip Grid",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-sand-disintegrate",
+     "name": "Sand Disintegrate",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-ember-disintegrate",
+     "name": "Ember Disintegrate",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-smoke-dissolve",
+     "name": "Smoke Dissolve",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-outline-draw",
+     "name": "Outline Draw",
+     "version": 1
+    }
+   ]
+  },
+  {
+   "kind": "effect",
+   "name": "shake-motion-repeat",
+   "title": "Shake, Motion & Repeat",
+   "creator": "Duplex",
+   "description": "Camera shakes, wiggles, path motion and repeat effects: nine shake and impact styles, spin, oscillate, echo, ring and grid repeats.",
+   "tags": [
+    "Move",
+    "Shake",
+    "Repeat"
+   ],
+   "added": "2026-11-23T03:42:14Z",
+   "file": "effects/shake-motion-repeat/shake-motion-repeat.abmfx",
+   "bytes": 26439,
+   "sha256": "d31877caec723ee83fe87bec556bdb659428db77dbec4aca9fe5a65217c3bdff",
+   "contents": [
+    {
+     "id": "duplex.dd-linear-repeat",
+     "name": "Echo Repeat",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-oscillate-swing",
+     "name": "Oscillate and Swing",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-radial-repeat",
+     "name": "Ring Repeat",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-spin-pulse",
+     "name": "Spin and Pulse",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-stretch-wobble",
+     "name": "Stretch and Wobble",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-quake-shake",
+     "name": "Quake Shake",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-sway-shake",
+     "name": "Sway Shake",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-impact-shake",
+     "name": "Impact Shake",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-auto-shake",
+     "name": "Auto Shake",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-keyframe-shake",
+     "name": "Keyframe Shake",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-tile-fill",
+     "name": "Tile Fill",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-grid-repeat",
+     "name": "Grid Repeat",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-directional-shake",
+     "name": "Directional Shake",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-impact-warp",
+     "name": "Impact Warp",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-wiggle-2d",
+     "name": "Wiggle",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-zoom-slide",
+     "name": "Zoom Slide Transition",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-shake-dissolve",
+     "name": "Shake Dissolve",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-move-along-path",
+     "name": "Path Motion",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-float-shake",
+     "name": "Float Shake",
+     "version": 1
+    }
+   ]
+  },
+  {
+   "kind": "effect",
+   "name": "glow-light-fire",
+   "title": "Glow, Light & Fire",
+   "creator": "Duplex",
+   "description": "Glows, light rays, fire, lightning, aurora, bubbles, stars and radial blurs.",
+   "tags": [
+    "Glow",
+    "Light",
+    "Fire",
+    "Stylize"
+   ],
+   "added": "2026-11-23T03:42:14Z",
+   "file": "effects/glow-light-fire/glow-light-fire.abmfx",
+   "bytes": 30495,
+   "sha256": "c26cb2b07bce2f061526d6c77c2a59b20330bbda764612188fae76dda31f0a2e",
+   "contents": [
+    {
+     "id": "duplex.dd-aurora",
+     "name": "Aurora",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-gold-glow",
+     "name": "Gold Glow",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-fire-embers",
+     "name": "Fire and Embers",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-starfield",
+     "name": "Starfield",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-eye-glow",
+     "name": "Eye Glow",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-light-sweep",
+     "name": "Light Sweep",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-flame-aura",
+     "name": "Flame Aura",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-radial-blur",
+     "name": "Radial Blur",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-ray-blur",
+     "name": "Ray Blur",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-light-rays",
+     "name": "Light Rays",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-glow-rings",
+     "name": "Glow Rings",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-prism-glow",
+     "name": "Prism Glow",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-bright-ray-glow",
+     "name": "Bright Ray Glow",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-dark-glow",
+     "name": "Dark Glow",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-soap-bubbles",
+     "name": "Soap Bubbles",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-electric-arc",
+     "name": "Electric Arc",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-soft-glow",
+     "name": "Soft Glow",
+     "version": 1
+    }
+   ]
+  },
+  {
+   "kind": "effect",
+   "name": "distort-3d-text",
+   "title": "Distort, 3D & Text",
+   "creator": "Duplex",
+   "description": "Warps, lenses and ripples, fake-3D extrusions, and text effects including chrome, curved and animated text.",
+   "tags": [
+    "Distort",
+    "3D",
+    "Text"
+   ],
+   "added": "2026-11-23T03:42:14Z",
+   "file": "effects/distort-3d-text/distort-3d-text.abmfx",
+   "bytes": 37090,
+   "sha256": "0871a4e5844682859122c98b1e1ecd4cf1dbc6a02bd06784b6372b9df21f0893",
+   "contents": [
+    {
+     "id": "duplex.dd-extruded-text",
+     "name": "Extruded Text",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-tilted-slab",
+     "name": "Tilted Slab",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-blood-drip",
+     "name": "Blood Drip",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-round-lens",
+     "name": "Round Lens",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-magnifier",
+     "name": "Magnifying Glass",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-ripple",
+     "name": "Water Ripple",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-text-animations",
+     "name": "Text Animations",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-chrome-text",
+     "name": "Chrome and Neon Text",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-wavy",
+     "name": "Wavy Image",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-inner-pinch-bulge",
+     "name": "Center Pinch and Bulge",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-pinch-bulge",
+     "name": "Pinch and Bulge",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-twirl",
+     "name": "Twirl",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-wave-warp",
+     "name": "Wave Warp",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-lava-warp",
+     "name": "Lava Warp",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-liquid-smear",
+     "name": "Liquid Smear",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-slit-scan",
+     "name": "Slit Scan",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-extrude",
+     "name": "Layer Extrude",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-taper",
+     "name": "Taper",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-text-on-curve",
+     "name": "Text on Curve",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-bubble-lens",
+     "name": "Bubble Lens",
+     "version": 1
+    }
+   ]
+  },
+  {
+   "kind": "effect",
+   "name": "color-looks-keying",
+   "title": "Color, Looks & Keying",
+   "creator": "Duplex",
+   "description": "Color grades and looks, gradients and fills, black bars, sharpen, paper cutout and low-poly styles, and color, luma and center keys.",
+   "tags": [
+    "Color",
+    "Key",
+    "Stylize"
+   ],
+   "added": "2026-11-23T03:42:14Z",
+   "file": "effects/color-looks-keying/color-looks-keying.abmfx",
+   "bytes": 38789,
+   "sha256": "764e33ce1d5044fcfa7d70ffe573c518f12b237fb67e1042f4f4430866e7f9ef",
+   "contents": [
+    {
+     "id": "duplex.dd-black-bars",
+     "name": "Black Bars",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-tracking-boxes",
+     "name": "Tracking Boxes",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-palette-cycle",
+     "name": "Palette Cycle",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-gaussian-splatting",
+     "name": "Soft Blob Mosaic",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-photo-grade",
+     "name": "Photo Grade",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-low-quality",
+     "name": "Low Quality Video",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-papercut",
+     "name": "Paper Cutout",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-low-poly",
+     "name": "Low Poly Trace",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-rainbow-stripes",
+     "name": "Rainbow Stripes",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-sharpen",
+     "name": "Sharpen",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-knockout-look",
+     "name": "Knockout Look",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-chroma-center-key",
+     "name": "Chroma and Center Key",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-chroma-luma-key",
+     "name": "Chroma and Luma Key",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-body-cutout",
+     "name": "Oval Spotlight Outline",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-code-grade",
+     "name": "Code Color Grade",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-film-look",
+     "name": "Film Look",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-teal-orange",
+     "name": "Teal and Orange",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-color-cycle",
+     "name": "Color Cycle",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-3color-gradient",
+     "name": "Three Color Gradient",
+     "version": 1
+    },
+    {
+     "id": "duplex.dd-solid-color",
+     "name": "Color Fill",
+     "version": 1
+    }
+   ]
+  },
+  {
+   "kind": "effect",
    "name": "fun-pack",
    "title": "Fun Pack",
    "creator": "AbsentMotion",

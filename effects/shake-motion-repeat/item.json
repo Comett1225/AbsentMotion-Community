@@ -1,0 +1,113 @@
+{
+ "kind": "effect",
+ "name": "shake-motion-repeat",
+ "title": "Shake, Motion & Repeat",
+ "creator": "Duplex",
+ "description": "Camera shakes, wiggles, path motion and repeat effects: nine shake and impact styles, spin, oscillate, echo, ring and grid repeats.",
+ "tags": [
+  "Move",
+  "Shake",
+  "Repeat"
+ ],
+ "added": "2026-11-23T03:42:14Z",
+ "file": "effects/shake-motion-repeat/shake-motion-repeat.abmfx",
+ "bytes": 26439,
+ "sha256": "d31877caec723ee83fe87bec556bdb659428db77dbec4aca9fe5a65217c3bdff",
+ "contents": [
+  {
+   "id": "duplex.dd-linear-repeat",
+   "name": "Echo Repeat",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-oscillate-swing",
+   "name": "Oscillate and Swing",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-radial-repeat",
+   "name": "Ring Repeat",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-spin-pulse",
+   "name": "Spin and Pulse",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-stretch-wobble",
+   "name": "Stretch and Wobble",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-quake-shake",
+   "name": "Quake Shake",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-sway-shake",
+   "name": "Sway Shake",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-impact-shake",
+   "name": "Impact Shake",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-auto-shake",
+   "name": "Auto Shake",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-keyframe-shake",
+   "name": "Keyframe Shake",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-tile-fill",
+   "name": "Tile Fill",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-grid-repeat",
+   "name": "Grid Repeat",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-directional-shake",
+   "name": "Directional Shake",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-impact-warp",
+   "name": "Impact Warp",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-wiggle-2d",
+   "name": "Wiggle",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-zoom-slide",
+   "name": "Zoom Slide Transition",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-shake-dissolve",
+   "name": "Shake Dissolve",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-move-along-path",
+   "name": "Path Motion",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-float-shake",
+   "name": "Float Shake",
+   "version": 1
+  }
+ ]
+}

@@ -1,0 +1,118 @@
+{
+ "kind": "effect",
+ "name": "distort-3d-text",
+ "title": "Distort, 3D & Text",
+ "creator": "Duplex",
+ "description": "Warps, lenses and ripples, fake-3D extrusions, and text effects including chrome, curved and animated text.",
+ "tags": [
+  "Distort",
+  "3D",
+  "Text"
+ ],
+ "added": "2026-11-23T03:42:14Z",
+ "file": "effects/distort-3d-text/distort-3d-text.abmfx",
+ "bytes": 37090,
+ "sha256": "0871a4e5844682859122c98b1e1ecd4cf1dbc6a02bd06784b6372b9df21f0893",
+ "contents": [
+  {
+   "id": "duplex.dd-extruded-text",
+   "name": "Extruded Text",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-tilted-slab",
+   "name": "Tilted Slab",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-blood-drip",
+   "name": "Blood Drip",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-round-lens",
+   "name": "Round Lens",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-magnifier",
+   "name": "Magnifying Glass",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-ripple",
+   "name": "Water Ripple",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-text-animations",
+   "name": "Text Animations",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-chrome-text",
+   "name": "Chrome and Neon Text",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-wavy",
+   "name": "Wavy Image",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-inner-pinch-bulge",
+   "name": "Center Pinch and Bulge",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-pinch-bulge",
+   "name": "Pinch and Bulge",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-twirl",
+   "name": "Twirl",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-wave-warp",
+   "name": "Wave Warp",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-lava-warp",
+   "name": "Lava Warp",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-liquid-smear",
+   "name": "Liquid Smear",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-slit-scan",
+   "name": "Slit Scan",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-extrude",
+   "name": "Layer Extrude",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-taper",
+   "name": "Taper",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-text-on-curve",
+   "name": "Text on Curve",
+   "version": 1
+  },
+  {
+   "id": "duplex.dd-bubble-lens",
+   "name": "Bubble Lens",
+   "version": 1
+  }
+ ]
+}
