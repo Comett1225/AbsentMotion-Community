@@ -3,6 +3,24 @@
  "version": 2,
  "items": [
   {
+   "kind": "bundle",
+   "name": "preview-1280-vegas-pro-real",
+   "title": "Preview 1280 Vegas Pro REAL",
+   "creator": "OrenEffects2026",
+   "description": "1st Preview 1280 ever made on AbsentMotion",
+   "tags": [
+    "Edit"
+   ],
+   "added": "2026-11-24T02:29:06Z",
+   "file": "bundles/preview-1280-vegas-pro-real/preview-1280-vegas-pro-real.absproj",
+   "bytes": 1942945,
+   "sha256": "a0406be7487a76b72652c66b7d56312c92a18b1548d393953cc6c43986d24861",
+   "thumbnail": "bundles/preview-1280-vegas-pro-real/thumb.webp",
+   "width": 1280,
+   "height": 720,
+   "lengthMs": 6932
+  },
+  {
    "kind": "effect",
    "name": "transitions-dissolves-glitch",
    "title": "Transitions, Dissolves & Glitch",

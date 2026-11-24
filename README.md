@@ -30,9 +30,9 @@ Only the maintainer adds items to this repository. Everything is checked by a pe
 - Bundles must be 20 MB or smaller.
 - Preset bundles must be 20 MB or smaller. Older `.xml` presets must be 1 MB or smaller.
 - Effect files (`.json` or `.abmfx` packs) must be 512 KB or smaller. No effects taken or converted from another app's files.
-- You made the item, or you credit who made it in the description (someone else's edit, project, preset or art is fine with credit). Paid assets are not.
+- Edits can use clips from shows, anime, films and music videos. If you share someone else's edit, project, preset or art, credit them in the description. Paid assets are not allowed.
 - If something you made was shared here and you want it taken down, contact **comett1225** on Discord.
-- Items are shared under CC BY 4.0 per [LICENSE-ITEMS.md](LICENSE-ITEMS.md).
+- Items are shared under CC BY 4.0 per [LICENSE-ITEMS.md](LICENSE-ITEMS.md). Clips from shows, anime and films in an edit stay with their owners and are not part of that licence.
 
 ## Pictures
 
