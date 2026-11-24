@@ -15,8 +15,6 @@ ROOT = Path(__file__).resolve().parent.parent
 BUNDLE_LIMIT = 20 * 1024 * 1024
 PRESET_LIMIT = 1 * 1024 * 1024
 EFFECT_LIMIT = 512 * 1024
-THEME_LIMIT = 64 * 1024
-THEME_NAME_LIMIT = 40
 EFFECT_SKSL_LIMIT = 64 * 1024
 EFFECT_PARAM_LIMIT = 32
 EFFECT_PACK_LIMIT = 20
@@ -41,14 +39,12 @@ KIND_FOLDERS = {
     "bundles": "bundle",
     "presets": "preset",
     "effects": "effect",
-    "themes": "theme",
 }
 REQUIRED_READMES = (
     "README.md",
     "bundles/README.md",
     "presets/README.md",
     "effects/README.md",
-    "themes/README.md",
 )
 LAYER_TAGS = frozenset({
     "shape",
@@ -100,72 +96,6 @@ INDEX_FIELDS = (
     "credit",
     "contents",
 )
-
-THEME_COLOURS = frozenset({
-    "TopBar",
-    "PreviewBg",
-    "TimelineBg",
-    "Panel",
-    "PanelInset",
-    "Button",
-    "Field",
-    "FieldHi",
-    "Chosen",
-    "Well",
-    "Deepest",
-    "Line",
-    "MenuLine",
-    "KeyDigit",
-    "KeySymbol",
-    "Scrim",
-    "PressEditor",
-    "OnDark",
-    "OnDarkDim",
-    "Caption",
-    "Faint",
-    "Inactive",
-    "OnScrim",
-    "Accent",
-    "AccentLit",
-    "AccentGlow",
-    "AccentDeep",
-    "OnAccent",
-    "Cool",
-    "CoolDeep",
-    "Gold",
-    "Favorite",
-    "Warning",
-    "Bookmark",
-    "LayerBar",
-    "LayerBarStripe",
-    "TextBar",
-    "TextBarStripe",
-    "AudioBar",
-    "AudioWave",
-    "OnBar",
-    "OnAudioBar",
-    "HomeBg",
-    "Card",
-    "SheetBg",
-    "Navy",
-    "HomeAccent",
-    "OnNavy",
-    "OnNavyAccent",
-    "NavyHi",
-    "NavyLine",
-    "HomeInk",
-    "HomeMid",
-    "HomeDim",
-    "HomeFaint",
-    "HomeLine",
-    "HomePanel",
-    "HomeDrawer",
-    "SwitchOff",
-    "Thumb",
-    "MenuScrim",
-    "PressHome",
-})
-THEME_COLOUR_PATTERN = re.compile(r"^#(?:[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$")
 
 REPO_PATH_PATTERN = re.compile(r"^[A-Za-z0-9._/-]+$")
 SLUG_PATTERN = re.compile(r"^[a-z0-9-]{1,48}$")
@@ -621,72 +551,6 @@ def add_preset(path, root=ROOT, creator=None, description=None, tags=None):
     return f"presets/{name}"
 
 
-def read_theme(path):
-    raw_bytes = path.read_bytes()
-    size = len(raw_bytes)
-    if size > THEME_LIMIT:
-        raise Rejected(f"{path.name} is {size} bytes; themes must be {THEME_LIMIT >> 10} KB or smaller")
-    try:
-        theme = json.loads(raw_bytes.decode("utf-8-sig"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise Rejected(f"{path.name} is not a JSON theme file: {error}")
-    if not isinstance(theme, dict):
-        raise Rejected(f"{path.name} is not a JSON object")
-    colours = [key for key in theme if key in THEME_COLOURS]
-    if not colours:
-        raise Rejected(f"{path.name} has no theme colours")
-    for key in colours:
-        if not isinstance(theme[key], str) or not THEME_COLOUR_PATTERN.fullmatch(theme[key]):
-            raise Rejected(f"{path.name}: {key} must be #RRGGBB or #AARRGGBB")
-    name = theme.get("name")
-    if name is not None and (not isinstance(name, str) or not name.strip() or len(name.strip()) > THEME_NAME_LIMIT):
-        raise Rejected(f"{path.name}: name must be 1 to {THEME_NAME_LIMIT} characters")
-    return (name or "").strip(), raw_bytes, size, hashlib.sha256(raw_bytes).hexdigest()
-
-
-def is_theme_file(path):
-    try:
-        data = json.loads(path.read_bytes().decode("utf-8-sig"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-        return False
-    return isinstance(data, dict) and "sksl" not in data and any(key in THEME_COLOURS for key in data)
-
-
-def add_theme(path, root=ROOT, creator=None, description=None, tags=None, title=None):
-    name_in_file, raw_bytes, size, sha256 = read_theme(path)
-    clean_title = (title or name_in_file).strip()
-    if not clean_title or len(clean_title) > TITLE_LIMIT:
-        raise Rejected(f"{path.name}: a theme needs a name in the file or --title (1 to {TITLE_LIMIT} characters)")
-    clean_creator = (creator or "").strip()
-    if len(clean_creator) > CREATOR_LIMIT:
-        raise Rejected(f"creator is longer than {CREATOR_LIMIT} characters")
-    clean_description = (description or "").strip()
-    if len(clean_description) > DESCRIPTION_LIMIT:
-        raise Rejected(f"description is longer than {DESCRIPTION_LIMIT} characters")
-    clean_tags = parse_tags_argument(tags)
-    themes_dir = root / "themes"
-    themes_dir.mkdir(parents=True, exist_ok=True)
-    name = unique_slug(themes_dir, clean_title)
-    folder = themes_dir / name
-    folder.mkdir(parents=True)
-    item_rel = f"themes/{name}/{name}.json"
-    (root / item_rel).write_bytes(raw_bytes)
-    info = {"kind": "theme", "name": name, "title": clean_title}
-    if clean_creator:
-        info["creator"] = clean_creator
-    if clean_description:
-        info["description"] = clean_description
-    if clean_tags:
-        info["tags"] = clean_tags
-    info["added"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    info["file"] = item_rel
-    info["bytes"] = size
-    info["sha256"] = sha256
-    (folder / "item.json").write_text(json.dumps(info, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    rebuild_index(root)
-    return f"themes/{name}"
-
-
 def add_item(path, root=ROOT, creator=None, description=None, tags=None, title=None, credit=None):
     suffix = path.suffix.lower()
     if suffix == ".absproj":
@@ -697,13 +561,9 @@ def add_item(path, root=ROOT, creator=None, description=None, tags=None, title=N
         if title is not None or credit is not None:
             raise Rejected(f"{path.name}: --title and --credit only apply to effects")
         return add_preset(path, root, creator=creator, description=description, tags=tags)
-    if suffix == ".json" and is_theme_file(path):
-        if credit is not None:
-            raise Rejected(f"{path.name}: --credit only applies to effects")
-        return add_theme(path, root, creator=creator, description=description, tags=tags, title=title)
     if suffix in (".abmfx", ".json"):
         return add_effect(path, root, creator=creator, description=description, tags=tags, title=title, credit=credit)
-    raise Rejected(f"{path.name}: expected a .absproj bundle, an .xml preset, an .abmfx or .json effect, or a .json theme")
+    raise Rejected(f"{path.name}: expected a .absproj bundle, an .xml preset, or an .abmfx or .json effect")
 
 
 def build_index_data(root=ROOT):
@@ -797,7 +657,7 @@ def check_item_metadata(info, expected_kind, folder_prefix, problems):
         if not is_non_bool_int(min_version) or min_version < 1:
             problems.append(f"{folder_prefix}item.json: minVersion must be a positive integer")
 
-    if expected_kind in ("preset", "effect", "theme"):
+    if expected_kind in ("preset", "effect"):
         for key in ("width", "height", "lengthMs"):
             if key in info:
                 problems.append(f"{folder_prefix}item.json: {key} is only allowed for bundles")
@@ -831,7 +691,7 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
 
     file_rel = info.get("file")
     preset_bundle = expected_kind == "preset" and isinstance(file_rel, str) and file_rel.endswith(".absproj")
-    limit = THEME_LIMIT if expected_kind == "theme" else EFFECT_LIMIT if expected_kind == "effect" else PRESET_LIMIT if expected_kind == "preset" and not preset_bundle else BUNDLE_LIMIT
+    limit = EFFECT_LIMIT if expected_kind == "effect" else PRESET_LIMIT if expected_kind == "preset" and not preset_bundle else BUNDLE_LIMIT
 
     recorded_bytes = info.get("bytes")
     if not is_non_bool_int(recorded_bytes) or recorded_bytes < 0:
@@ -858,8 +718,6 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
             )
         elif expected_kind == "effect" and file_rel not in (f"{folder_prefix}{name}.abmfx", f"{folder_prefix}{name}.json"):
             problems.append(f"{folder_prefix}item.json: effect file must be {folder_prefix}{name}.abmfx or {folder_prefix}{name}.json")
-        elif expected_kind == "theme" and file_rel != f"{folder_prefix}{name}.json":
-            problems.append(f"{folder_prefix}item.json: theme file must be {folder_prefix}{name}.json")
 
         target_file = root / file_rel
         if target_file.parent == folder:
@@ -888,11 +746,6 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
                         problems.append(f"{folder_prefix}: {file_rel} is a project bundle, not a preset")
                 except Rejected as rejected:
                     problems.append(f"{folder_prefix}: {rejected}")
-            if expected_kind == "theme":
-                try:
-                    read_theme(target_file)
-                except Rejected as rejected:
-                    problems.append(f"{folder_prefix}: {rejected}")
             if expected_kind == "effect":
                 try:
                     effects = read_effects(target_file)[0]
@@ -905,7 +758,7 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
     has_valid_thumb = False
     if expected_kind == "bundle" and thumb_rel is None:
         problems.append(f"{folder_prefix}item.json: bundles must have a thumbnail")
-    if expected_kind in ("preset", "effect", "theme"):
+    if expected_kind in ("preset", "effect"):
         if thumb_rel is not None:
             problems.append(f"{folder_prefix}item.json: {expected_kind}s have no thumbnail; the app draws the picture itself")
         if (folder / "thumb.webp").exists():
@@ -1355,27 +1208,6 @@ def selftest():
             assert "the limit is" in str(rejected), rejected
         assert check_repo(root) == []
 
-        theme = root / "mint.json"
-        theme.write_text(json.dumps({"name": "Mint", "Accent": "#5BD6A4", "Scrim": "#F2050508"}), encoding="utf-8")
-        assert add_item(theme, root, creator="Someone") == "themes/mint"
-        listed = [entry for entry in build_index_data(root)["items"] if entry["kind"] == "theme"]
-        assert [entry["file"] for entry in listed] == ["themes/mint/mint.json"], listed
-        assert check_repo(root) == []
-        for bad, reason in ((["#5BD6A4"], "not a JSON object"), ({"name": "X"}, "no theme colours"),
-                            ({"Accent": "#5BD"}, "must be #RRGGBB"), ({"Accent": "#5BD6A4", "name": "N" * 41}, "name must be")):
-            theme.write_text(json.dumps(bad), encoding="utf-8")
-            try:
-                read_theme(theme)
-                raise AssertionError(f"accepted a bad theme {bad}")
-            except Rejected as rejected:
-                assert reason in str(rejected), rejected
-        theme.write_text(json.dumps({"Accent": "#5BD6A4", "pad": "x" * THEME_LIMIT}), encoding="utf-8")
-        try:
-            read_theme(theme)
-            raise AssertionError("accepted a theme over the size limit")
-        except Rejected as rejected:
-            assert "KB or smaller" in str(rejected), rejected
-
     print("selftest passed")
 
 
@@ -1386,8 +1218,8 @@ def build_parser():
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    add_parser = subparsers.add_parser("add", help="add .absproj project or preset bundles, .xml presets, .abmfx and .json effects, or .json themes")
-    add_parser.add_argument("files", nargs="+", type=Path, metavar="FILE", help="project or preset bundle (.absproj), preset (.xml), effect (.abmfx pack or .json) or theme (.json) files to add")
+    add_parser = subparsers.add_parser("add", help="add .absproj project or preset bundles, .xml presets, or .abmfx and .json effects")
+    add_parser.add_argument("files", nargs="+", type=Path, metavar="FILE", help="project or preset bundle (.absproj), preset (.xml), or effect (.abmfx pack or .json) files to add")
     add_parser.add_argument("--creator", help="creator name for .xml presets and effects (at most 80 characters; effects default to their author)")
     add_parser.add_argument("--description", help="description for .xml presets and effects (at most 500 characters)")
     add_parser.add_argument("--tags", help="comma-separated tags for .xml presets and effects (up to 8 tags, 30 characters each)")

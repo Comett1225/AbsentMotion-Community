@@ -3,21 +3,6 @@
  "version": 2,
  "items": [
   {
-   "kind": "theme",
-   "name": "light-green",
-   "title": "Light Green",
-   "creator": "AbsentMotion",
-   "description": "A deep navy editor with mint green highlights and a light grey home screen.",
-   "tags": [
-    "Green",
-    "Dark editor"
-   ],
-   "added": "2026-11-24T08:37:47Z",
-   "file": "themes/light-green/light-green.json",
-   "bytes": 1204,
-   "sha256": "717162d81f33d74d940d47858f9fae6256cdd8c1f7017119aa53273cd6722062"
-  },
-  {
    "kind": "bundle",
    "name": "preview-1280-vegas-pro-real",
    "title": "Preview 1280 Vegas Pro REAL",
