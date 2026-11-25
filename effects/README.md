@@ -94,11 +94,21 @@ To share several effects at once, put their `.json` files in a ZIP file (at the 
 
 The app knows an effect by its `author` and `id` together, so two creators can both make an effect called `fire` without getting in each other's way. To update your effect, keep the same `author` and `id` and raise `version`. People who already have it see **Update**; if they have a newer version than the file, the app asks before going back to the older one.
 
+## Thumbnails
+
+Every effect needs two thumbnails that show the effect, named after its `id`:
+
+- `<id>.webp`: 192 × 192 pixels, WebP, at most 150 KB. It can be a still picture or an animation of up to 3 seconds and 90 frames. The app shows it in lists and on tiles.
+- `<id>.hero.webp`: 720 × 720 pixels, a still WebP picture, at most 150 KB. The app shows it at the top of the effect's page.
+
+An effect without both thumbnails, or with thumbnails of the wrong size or kind, is not added.
+
 ## Sharing your effect
 
 1. Test it in AbsentMotion first. If the app says **Doesn't work on this device**, the shader has a mistake.
-2. Upload the `.json` or `.abmfx` file to any file hosting website (an anonymous one, Google Drive or MEGA). Anyone with the link must be able to download it.
-3. Send the link with the [Community form](https://forms.gle/Xyn4TiKNJ9kUPQ7x8) and choose **Effect**.
+2. Put the `.json` or `.abmfx` file and a `thumbs` folder with every effect's thumbnails in one ZIP file.
+3. Upload the ZIP file to any file hosting website (an anonymous one, Google Drive or MEGA). Anyone with the link must be able to download it.
+4. Send the link with the [Community form](https://forms.gle/Xyn4TiKNJ9kUPQ7x8) and choose **Effect**.
 
 A person checks every effect before it goes up.
 
@@ -107,5 +117,6 @@ A person checks every effect before it goes up.
 - You wrote the shader, or its licence lets you share it and you say where it came from in the description.
 - No effects taken or converted from another app's files. Making your own effect that looks like one in another app is fine: say what inspired it.
 - One effect file is 512 KB or smaller, and a pack holds up to 20 effects.
+- Every effect has a small and a large thumbnail (see [Thumbnails](#thumbnails)).
 - Effects are shared under CC BY 4.0 per [LICENSE-ITEMS.md](../LICENSE-ITEMS.md), unless the effect's `licence` field says otherwise.
 - If something you made was shared here and you want it taken down, contact **comett1225** on Discord.

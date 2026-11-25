@@ -17,97 +17,135 @@
   {
    "id": "duplex.dd-linear-repeat",
    "name": "Echo Repeat",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-linear-repeat.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-linear-repeat.hero.webp"
   },
   {
    "id": "duplex.dd-oscillate-swing",
    "name": "Oscillate and Swing",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-oscillate-swing.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-oscillate-swing.hero.webp"
   },
   {
    "id": "duplex.dd-radial-repeat",
    "name": "Ring Repeat",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-radial-repeat.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-radial-repeat.hero.webp"
   },
   {
    "id": "duplex.dd-spin-pulse",
    "name": "Spin and Pulse",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-spin-pulse.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-spin-pulse.hero.webp"
   },
   {
    "id": "duplex.dd-stretch-wobble",
    "name": "Stretch and Wobble",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-stretch-wobble.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-stretch-wobble.hero.webp"
   },
   {
    "id": "duplex.dd-quake-shake",
    "name": "Quake Shake",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-quake-shake.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-quake-shake.hero.webp"
   },
   {
    "id": "duplex.dd-sway-shake",
    "name": "Sway Shake",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-sway-shake.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-sway-shake.hero.webp"
   },
   {
    "id": "duplex.dd-impact-shake",
    "name": "Impact Shake",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-impact-shake.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-impact-shake.hero.webp"
   },
   {
    "id": "duplex.dd-auto-shake",
    "name": "Auto Shake",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-auto-shake.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-auto-shake.hero.webp"
   },
   {
    "id": "duplex.dd-keyframe-shake",
    "name": "Keyframe Shake",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-keyframe-shake.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-keyframe-shake.hero.webp"
   },
   {
    "id": "duplex.dd-tile-fill",
    "name": "Tile Fill",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-tile-fill.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-tile-fill.hero.webp"
   },
   {
    "id": "duplex.dd-grid-repeat",
    "name": "Grid Repeat",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-grid-repeat.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-grid-repeat.hero.webp"
   },
   {
    "id": "duplex.dd-directional-shake",
    "name": "Directional Shake",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-directional-shake.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-directional-shake.hero.webp"
   },
   {
    "id": "duplex.dd-impact-warp",
    "name": "Impact Warp",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-impact-warp.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-impact-warp.hero.webp"
   },
   {
    "id": "duplex.dd-wiggle-2d",
    "name": "Wiggle",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-wiggle-2d.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-wiggle-2d.hero.webp"
   },
   {
    "id": "duplex.dd-zoom-slide",
    "name": "Zoom Slide Transition",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-zoom-slide.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-zoom-slide.hero.webp"
   },
   {
    "id": "duplex.dd-shake-dissolve",
    "name": "Shake Dissolve",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-shake-dissolve.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-shake-dissolve.hero.webp"
   },
   {
    "id": "duplex.dd-move-along-path",
    "name": "Path Motion",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-move-along-path.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-move-along-path.hero.webp"
   },
   {
    "id": "duplex.dd-float-shake",
    "name": "Float Shake",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/shake-motion-repeat/thumbs/dd-float-shake.webp",
+   "hero": "effects/shake-motion-repeat/thumbs/dd-float-shake.hero.webp"
   }
  ]
 }

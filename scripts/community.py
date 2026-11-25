@@ -18,6 +18,12 @@ EFFECT_LIMIT = 512 * 1024
 EFFECT_SKSL_LIMIT = 64 * 1024
 EFFECT_PARAM_LIMIT = 32
 EFFECT_PACK_LIMIT = 20
+EFFECT_THUMB_SIDE = 192
+EFFECT_HERO_SIDE = 720
+EFFECT_THUMB_LIMIT = 150 * 1024
+EFFECT_HERO_LIMIT = 150 * 1024
+EFFECT_THUMB_FRAMES = 90
+EFFECT_THUMB_MS = 3000
 EFFECT_CATEGORIES = frozenset({"color", "blur", "distort", "stylize", "noise", "repeat", "key", "move", "beat", "3d", "text", "other"})
 EFFECT_PARAM_TYPES = frozenset({"float", "angle", "point", "color", "switch", "choice", "text"})
 MANIFEST_LIMIT = 1 * 1024 * 1024
@@ -163,6 +169,62 @@ def validate_repo_path(value, expected_prefix):
 
 def is_webp(data):
     return len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP"
+
+
+def webp_info(data):
+    if not is_webp(data):
+        return None
+    width = height = None
+    frames = duration = 0
+    pos, end = 12, min(len(data), 8 + int.from_bytes(data[4:8], "little"))
+    while pos + 8 <= end:
+        kind, size = data[pos:pos + 4], int.from_bytes(data[pos + 4:pos + 8], "little")
+        body = data[pos + 8:pos + 8 + size]
+        if len(body) < size:
+            return None
+        if kind == b"VP8X" and size >= 10:
+            width, height = 1 + int.from_bytes(body[4:7], "little"), 1 + int.from_bytes(body[7:10], "little")
+        elif kind == b"ANMF" and size >= 16:
+            frames += 1
+            duration += int.from_bytes(body[12:15], "little")
+        elif kind == b"VP8 " and size >= 10 and width is None:
+            width, height = int.from_bytes(body[6:8], "little") & 0x3FFF, int.from_bytes(body[8:10], "little") & 0x3FFF
+        elif kind == b"VP8L" and size >= 5 and width is None:
+            bits = int.from_bytes(body[1:5], "little")
+            width, height = (bits & 0x3FFF) + 1, ((bits >> 14) & 0x3FFF) + 1
+        pos += 8 + size + (size & 1)
+    return None if width is None else (width, height, max(frames, 1), duration)
+
+
+def effect_picture_names(effect_id):
+    return f"{effect_id}.webp", f"{effect_id}.hero.webp"
+
+
+def check_effect_picture(path, hero):
+    label = f"thumbs/{path.name}"
+    if not path.is_file():
+        raise Rejected(f"missing thumbnail {label}")
+    limit = EFFECT_HERO_LIMIT if hero else EFFECT_THUMB_LIMIT
+    size = path.stat().st_size
+    if size > limit:
+        raise Rejected(f"{label} is {size / 1024:.0f} KB; the limit is {limit // 1024} KB")
+    info = webp_info(path.read_bytes())
+    if info is None:
+        raise Rejected(f"{label} is not a WebP picture")
+    dimensions, frames, duration = info[:2], info[2], info[3]
+    if hero and frames > 1:
+        raise Rejected(f"{label} is animated; the large thumbnail is a still picture")
+    if frames > EFFECT_THUMB_FRAMES or duration > EFFECT_THUMB_MS:
+        raise Rejected(f"{label} has {frames} frames over {duration} ms; the limit is {EFFECT_THUMB_FRAMES} frames and {EFFECT_THUMB_MS} ms")
+    side = EFFECT_HERO_SIDE if hero else EFFECT_THUMB_SIDE
+    if tuple(dimensions) != (side, side):
+        raise Rejected(f"{label} is {dimensions[0]}x{dimensions[1]}; it must be {side}x{side}")
+
+
+def check_effect_pictures(folder, effects):
+    for effect in effects:
+        for name, hero in zip(effect_picture_names(effect["id"]), (False, True)):
+            check_effect_picture(folder / name, hero)
 
 
 def read_bundle(path):
@@ -327,9 +389,11 @@ def creator_slug(author):
     return slug or "u" + hashlib.sha256(text.encode("utf-8")).hexdigest()[:8]
 
 
-def effect_contents(effects, author):
+def effect_contents(effects, author, folder):
     slug = creator_slug(author)
-    return [{"id": f"{slug}.{effect['id']}", "name": effect["name"].strip(), "version": effect.get("version", 1)} for effect in effects]
+    return [{"id": f"{slug}.{effect['id']}", "name": effect["name"].strip(), "version": effect.get("version", 1),
+             "thumbnail": f"{folder}thumbs/{effect_picture_names(effect['id'])[0]}", "hero": f"{folder}thumbs/{effect_picture_names(effect['id'])[1]}"}
+            for effect in effects]
 
 
 def check_effect(source, effect):
@@ -406,8 +470,11 @@ def read_effects(path):
     return effects, raw_bytes, size, hashlib.sha256(raw_bytes).hexdigest()
 
 
-def add_effect(path, root=ROOT, creator=None, description=None, tags=None, title=None, credit=None):
+def add_effect(path, root=ROOT, creator=None, description=None, tags=None, title=None, credit=None, thumbs=None):
     effects, raw_bytes, size, sha256 = read_effects(path)
+    if thumbs is None:
+        raise Rejected(f"{path.name}: effects need thumbnails; pass --thumbs with a folder holding <id>.webp and <id>.hero.webp for every effect")
+    check_effect_pictures(thumbs, effects)
     first = effects[0]
     authors = {(effect.get("author") or "").strip().lower() for effect in effects}
     if len(authors) > 1:
@@ -417,7 +484,7 @@ def add_effect(path, root=ROOT, creator=None, description=None, tags=None, title
     clean_credit = (credit or "").strip()
     if len(clean_credit) > CREDIT_LIMIT:
         raise Rejected(f"credit is longer than {CREDIT_LIMIT} characters")
-    contents = effect_contents(effects, first.get("author"))
+    contents = effect_contents(effects, first.get("author"), "effects/-/")
     taken = {entry["id"]: item for item, ids in effect_ids_in_repo(root).items() for entry in ids}
     for entry in contents:
         if entry["id"] in taken:
@@ -440,6 +507,10 @@ def add_effect(path, root=ROOT, creator=None, description=None, tags=None, title
     folder.mkdir(parents=True)
     item_rel = f"effects/{name}/{name}{path.suffix.lower()}"
     (root / item_rel).write_bytes(raw_bytes)
+    (folder / "thumbs").mkdir()
+    for effect in effects:
+        for picture in effect_picture_names(effect["id"]):
+            shutil.copyfile(thumbs / picture, folder / "thumbs" / picture)
 
     info = {"kind": "effect", "name": name, "title": clean_title}
     if clean_creator:
@@ -454,7 +525,7 @@ def add_effect(path, root=ROOT, creator=None, description=None, tags=None, title
     info["sha256"] = sha256
     if clean_credit:
         info["credit"] = clean_credit
-    info["contents"] = contents
+    info["contents"] = effect_contents(effects, first.get("author"), f"effects/{name}/")
     (folder / "item.json").write_text(json.dumps(info, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     rebuild_index(root)
     return f"effects/{name}"
@@ -551,18 +622,18 @@ def add_preset(path, root=ROOT, creator=None, description=None, tags=None):
     return f"presets/{name}"
 
 
-def add_item(path, root=ROOT, creator=None, description=None, tags=None, title=None, credit=None):
+def add_item(path, root=ROOT, creator=None, description=None, tags=None, title=None, credit=None, thumbs=None):
     suffix = path.suffix.lower()
     if suffix == ".absproj":
-        if creator is not None or description is not None or tags is not None or title is not None or credit is not None:
+        if creator is not None or description is not None or tags is not None or title is not None or credit is not None or thumbs is not None:
             raise Rejected(f"{path.name}: --creator, --description, --tags and --title only apply to .xml presets and effects")
         return add_bundle(path, root)
     if suffix == ".xml":
-        if title is not None or credit is not None:
-            raise Rejected(f"{path.name}: --title and --credit only apply to effects")
+        if title is not None or credit is not None or thumbs is not None:
+            raise Rejected(f"{path.name}: --title, --credit and --thumbs only apply to effects")
         return add_preset(path, root, creator=creator, description=description, tags=tags)
     if suffix in (".abmfx", ".json"):
-        return add_effect(path, root, creator=creator, description=description, tags=tags, title=title, credit=credit)
+        return add_effect(path, root, creator=creator, description=description, tags=tags, title=title, credit=credit, thumbs=thumbs)
     raise Rejected(f"{path.name}: expected a .absproj bundle, an .xml preset, or an .abmfx or .json effect")
 
 
@@ -706,6 +777,7 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
         recorded_sha = None
 
     item_file_name = None
+    effect_pictures = set()
     path_error = validate_repo_path(file_rel, folder_prefix)
     if path_error:
         problems.append(f"{folder_prefix}item.json: invalid file path ({path_error})")
@@ -749,8 +821,15 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
             if expected_kind == "effect":
                 try:
                     effects = read_effects(target_file)[0]
-                    if info.get("contents") != effect_contents(effects, effects[0].get("author")):
-                        problems.append(f"{folder_prefix}item.json: contents must list every effect as creator.id with its name and version")
+                    if info.get("contents") != effect_contents(effects, effects[0].get("author"), folder_prefix):
+                        problems.append(f"{folder_prefix}item.json: contents must list every effect as creator.id with its name, version, thumbnail and hero")
+                    effect_pictures = {picture for effect in effects for picture in effect_picture_names(effect["id"])}
+                    for effect in effects:
+                        for picture, hero in zip(effect_picture_names(effect["id"]), (False, True)):
+                            try:
+                                check_effect_picture(folder / "thumbs" / picture, hero)
+                            except Rejected as rejected:
+                                problems.append(f"{folder_prefix}: {rejected}")
                 except Rejected as rejected:
                     problems.append(f"{folder_prefix}: {rejected}")
 
@@ -758,11 +837,14 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
     has_valid_thumb = False
     if expected_kind == "bundle" and thumb_rel is None:
         problems.append(f"{folder_prefix}item.json: bundles must have a thumbnail")
-    if expected_kind in ("preset", "effect"):
+    if expected_kind == "preset":
         if thumb_rel is not None:
-            problems.append(f"{folder_prefix}item.json: {expected_kind}s have no thumbnail; the app draws the picture itself")
+            problems.append(f"{folder_prefix}item.json: presets have no thumbnail; the app draws the picture itself")
         if (folder / "thumb.webp").exists():
-            problems.append(f"{folder_prefix}: {expected_kind}s have no thumb.webp; the app draws the picture itself")
+            problems.append(f"{folder_prefix}: presets have no thumb.webp; the app draws the picture itself")
+    elif expected_kind == "effect":
+        if thumb_rel is not None or (folder / "thumb.webp").exists():
+            problems.append(f"{folder_prefix}: effects have no thumb.webp or thumbnail field; every effect has its pictures in thumbs/")
     elif thumb_rel is not None:
         thumb_error = validate_repo_path(thumb_rel, folder_prefix)
         if thumb_error:
@@ -787,7 +869,11 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
     if has_valid_thumb:
         allowed_names.add("thumb.webp")
     for child in sorted(folder.iterdir()):
-        if child.is_dir() or child.name not in allowed_names:
+        if expected_kind == "effect" and child.name == "thumbs" and child.is_dir():
+            for picture in sorted(child.iterdir()):
+                if picture.is_dir() or picture.name not in effect_pictures:
+                    problems.append(f"{folder_prefix}: stray entry thumbs/{picture.name}")
+        elif child.is_dir() or child.name not in allowed_names:
             problems.append(f"{folder_prefix}: stray entry {child.name}")
 
 
@@ -865,6 +951,23 @@ def create_fake_bundle(path, community=None, padding=0, thumb=b"RIFF0000WEBP", s
 
 def create_fake_preset(path, xml_text):
     path.write_text(xml_text, encoding="utf-8")
+
+
+def fake_webp(side, frames=0, ms=0):
+    chunk = lambda kind, body: kind + len(body).to_bytes(4, "little") + body + b"\0" * (len(body) & 1)
+    body = chunk(b"VP8X", bytes([2 if frames else 0, 0, 0, 0]) + (side - 1).to_bytes(3, "little") * 2)
+    for _ in range(frames):
+        body += chunk(b"ANMF", bytes(12) + (ms // frames).to_bytes(3, "little") + bytes(1))
+    return b"RIFF" + (len(body) + 4).to_bytes(4, "little") + b"WEBP" + body
+
+
+def write_fake_thumbs(folder, ids):
+    folder.mkdir(parents=True, exist_ok=True)
+    for effect_id in ids:
+        small, hero = effect_picture_names(effect_id)
+        (folder / small).write_bytes(fake_webp(EFFECT_THUMB_SIDE, frames=30, ms=2000))
+        (folder / hero).write_bytes(fake_webp(EFFECT_HERO_SIDE))
+    return folder
 
 
 def expect_rejected(action, expected_fragment):
@@ -992,8 +1095,7 @@ def selftest():
         expect_rejected(lambda: add_item(no_title, root), "no title attribute")
 
         expect_rejected(lambda: add_item(good_bundle, root, creator="Someone"), "only apply to .xml presets")
-        _, unknown = build_parser().parse_known_args(["add", str(good_preset), "--thumb", "picture.webp"])
-        assert "--thumb" in unknown, unknown
+        expect_rejected(lambda: add_item(good_preset, root, thumbs=root), "--thumbs only apply to effects")
 
         preset_folder = root / "presets/fade-in"
         stray_thumb = preset_folder / "thumb.webp"
@@ -1156,13 +1258,44 @@ def selftest():
                   "params": [{"id": "amount", "type": "float", "default": 1, "min": 0, "max": 1}], "sksl": "uniform shader image;\nhalf4 main(float2 p) { return image.eval(p); }\n"}
         effect_json = root / "duotone.json"
         effect_json.write_text(json.dumps(effect), encoding="utf-8")
-        assert add_item(effect_json, root, tags="Color") == "effects/simple-duotone"
+        thumbs = write_fake_thumbs(root / "thumbs-in", ["simple-duotone", "one", "two"])
+        expect_rejected(lambda: add_item(effect_json, root, tags="Color"), "effects need thumbnails")
+        for broken, reason in ((fake_webp(256), "it must be 192x192"), (fake_webp(192, frames=91, ms=2000), "the limit is 90 frames"),
+                               (fake_webp(192, frames=40, ms=3200), "and 3000 ms"), (b"\x89PNG\r\n\x1a\n0000", "not a WebP picture"),
+                               (fake_webp(192) + bytes(EFFECT_THUMB_LIMIT), "the limit is 150 KB")):
+            (thumbs / "simple-duotone.webp").write_bytes(broken)
+            expect_rejected(lambda: add_item(effect_json, root, tags="Color", thumbs=thumbs), reason)
+        (thumbs / "simple-duotone.webp").write_bytes(fake_webp(EFFECT_THUMB_SIDE))
+        for broken, reason in ((fake_webp(512), "it must be 720x720"), (fake_webp(720, frames=2, ms=200), "is animated"), (b"\0\0\0\x1cftypavif" + bytes(20), "not a WebP picture")):
+            (thumbs / "simple-duotone.hero.webp").write_bytes(broken)
+            expect_rejected(lambda: add_item(effect_json, root, tags="Color", thumbs=thumbs), reason)
+        (thumbs / "simple-duotone.hero.webp").unlink()
+        expect_rejected(lambda: add_item(effect_json, root, tags="Color", thumbs=thumbs), "missing thumbnail thumbs/simple-duotone.hero.webp")
+        (thumbs / "simple-duotone.hero.webp").write_bytes(fake_webp(EFFECT_HERO_SIDE))
+        assert not (root / "effects/simple-duotone").exists()
+        assert add_item(effect_json, root, tags="Color", thumbs=thumbs) == "effects/simple-duotone"
         effect_item = json.loads((root / "effects/simple-duotone/item.json").read_text(encoding="utf-8"))
         assert effect_item["kind"] == "effect" and effect_item["creator"] == "Someone"
-        assert effect_item["contents"] == [{"id": "someone.simple-duotone", "name": "Simple Duotone", "version": 1}]
+        assert effect_item["contents"] == [{"id": "someone.simple-duotone", "name": "Simple Duotone", "version": 1,
+                                            "thumbnail": "effects/simple-duotone/thumbs/simple-duotone.webp", "hero": "effects/simple-duotone/thumbs/simple-duotone.hero.webp"}]
+        assert sorted(child.name for child in (root / "effects/simple-duotone/thumbs").iterdir()) == ["simple-duotone.hero.webp", "simple-duotone.webp"]
+        assert check_repo(root) == []
+        hero_file = root / "effects/simple-duotone/thumbs/simple-duotone.hero.webp"
+        hero_file.unlink()
+        assert any("missing thumbnail thumbs/simple-duotone.hero.webp" in problem for problem in check_repo(root))
+        hero_file.write_bytes(fake_webp(EFFECT_HERO_SIDE + 1))
+        assert any("it must be 720x720" in problem for problem in check_repo(root))
+        hero_file.write_bytes(fake_webp(EFFECT_HERO_SIDE))
+        (hero_file.parent / "extra.webp").write_bytes(fake_webp(EFFECT_THUMB_SIDE))
+        assert any("stray entry thumbs/extra.webp" in problem for problem in check_repo(root))
+        (hero_file.parent / "extra.webp").unlink()
+        (root / "effects/simple-duotone/thumb.webp").write_bytes(fake_webp(EFFECT_THUMB_SIDE))
+        assert any("effects have no thumb.webp" in problem for problem in check_repo(root))
+        (root / "effects/simple-duotone/thumb.webp").unlink()
+        assert check_repo(root) == []
         assert creator_slug("After Motion Z") == "after-motion-z" and creator_slug("") == "unknown" and creator_slug("مصمم").startswith("u")
         try:
-            add_item(effect_json, root)
+            add_item(effect_json, root, thumbs=thumbs)
             raise AssertionError("accepted the same effect twice")
         except Rejected as rejected:
             assert "already in effects/simple-duotone" in str(rejected), rejected
@@ -1171,7 +1304,7 @@ def selftest():
             archive.writestr("one.json", json.dumps(dict(effect, id="one", name="One")))
             archive.writestr("two.json", json.dumps(dict(effect, id="two", name="Two")))
             archive.writestr("notes.txt", "ignored")
-        assert add_item(pack, root, credit="Inspired by Glow Maker") == "effects/glow-pack"
+        assert add_item(pack, root, credit="Inspired by Glow Maker", thumbs=thumbs) == "effects/glow-pack"
         assert json.loads((root / "effects/glow-pack/item.json").read_text(encoding="utf-8"))["credit"] == "Inspired by Glow Maker"
         assert check_repo(root) == []
         assert any(entry["kind"] == "effect" and entry["contents"] for entry in json.loads((root / "index.json").read_text(encoding="utf-8"))["items"])
@@ -1187,13 +1320,14 @@ def selftest():
                             (dict(effect, params=[{"id": "a", "type": "slider"}]), "every setting needs"), (dict(effect, sksl="no shader"), "main function")):
             effect_json.write_text(json.dumps(bad), encoding="utf-8")
             try:
-                add_item(effect_json, root)
+                add_item(effect_json, root, thumbs=thumbs)
                 raise AssertionError(f"accepted {reason}")
             except Rejected as rejected:
                 assert reason in str(rejected), rejected
         effect_json.write_text(json.dumps({k: v for k, v in effect.items() if k != "author"} | {"id": "no-author"}), encoding="utf-8")
+        write_fake_thumbs(thumbs, ["no-author"])
         try:
-            add_item(effect_json, root)
+            add_item(effect_json, root, thumbs=thumbs)
             raise AssertionError("accepted an effect without an author")
         except Rejected as rejected:
             assert "need an author" in str(rejected), rejected
@@ -1202,7 +1336,7 @@ def selftest():
             for number in range(EFFECT_PACK_LIMIT + 1):
                 archive.writestr(f"e{number}.json", json.dumps(dict(effect, id=f"e{number}")))
         try:
-            add_item(big, root, title="Big")
+            add_item(big, root, title="Big", thumbs=thumbs)
             raise AssertionError("accepted a pack with too many effects")
         except Rejected as rejected:
             assert "the limit is" in str(rejected), rejected
@@ -1225,6 +1359,7 @@ def build_parser():
     add_parser.add_argument("--tags", help="comma-separated tags for .xml presets and effects (up to 8 tags, 30 characters each)")
     add_parser.add_argument("--title", help="title for an effect pack (a single effect uses its name)")
     add_parser.add_argument("--credit", help="credit line for an effect pack, for example 'Inspired by After Motion Z' (at most 120 characters)")
+    add_parser.add_argument("--thumbs", type=Path, help="folder with every effect's thumbnails: <id>.webp (192x192) and <id>.hero.webp (720x720)")
 
     subparsers.add_parser("index", help="rebuild index.json from all item.json files")
     subparsers.add_parser("check", help="verify item files, metadata, paths, READMEs, and index.json")
@@ -1270,6 +1405,7 @@ def main():
                     tags=args.tags,
                     title=args.title,
                     credit=args.credit,
+                    thumbs=args.thumbs,
                 )
                 print(f"added {added_folder}")
             except Rejected as rejected:

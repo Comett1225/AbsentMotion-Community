@@ -17,102 +17,142 @@
   {
    "id": "duplex.dd-extruded-text",
    "name": "Extruded Text",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-extruded-text.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-extruded-text.hero.webp"
   },
   {
    "id": "duplex.dd-tilted-slab",
    "name": "Tilted Slab",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-tilted-slab.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-tilted-slab.hero.webp"
   },
   {
    "id": "duplex.dd-blood-drip",
    "name": "Blood Drip",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-blood-drip.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-blood-drip.hero.webp"
   },
   {
    "id": "duplex.dd-round-lens",
    "name": "Round Lens",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-round-lens.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-round-lens.hero.webp"
   },
   {
    "id": "duplex.dd-magnifier",
    "name": "Magnifying Glass",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-magnifier.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-magnifier.hero.webp"
   },
   {
    "id": "duplex.dd-ripple",
    "name": "Water Ripple",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-ripple.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-ripple.hero.webp"
   },
   {
    "id": "duplex.dd-text-animations",
    "name": "Text Animations",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-text-animations.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-text-animations.hero.webp"
   },
   {
    "id": "duplex.dd-chrome-text",
    "name": "Chrome and Neon Text",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-chrome-text.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-chrome-text.hero.webp"
   },
   {
    "id": "duplex.dd-wavy",
    "name": "Wavy Image",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-wavy.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-wavy.hero.webp"
   },
   {
    "id": "duplex.dd-inner-pinch-bulge",
    "name": "Center Pinch and Bulge",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-inner-pinch-bulge.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-inner-pinch-bulge.hero.webp"
   },
   {
    "id": "duplex.dd-pinch-bulge",
    "name": "Pinch and Bulge",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-pinch-bulge.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-pinch-bulge.hero.webp"
   },
   {
    "id": "duplex.dd-twirl",
    "name": "Twirl",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-twirl.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-twirl.hero.webp"
   },
   {
    "id": "duplex.dd-wave-warp",
    "name": "Wave Warp",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-wave-warp.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-wave-warp.hero.webp"
   },
   {
    "id": "duplex.dd-lava-warp",
    "name": "Lava Warp",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-lava-warp.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-lava-warp.hero.webp"
   },
   {
    "id": "duplex.dd-liquid-smear",
    "name": "Liquid Smear",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-liquid-smear.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-liquid-smear.hero.webp"
   },
   {
    "id": "duplex.dd-slit-scan",
    "name": "Slit Scan",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-slit-scan.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-slit-scan.hero.webp"
   },
   {
    "id": "duplex.dd-extrude",
    "name": "Layer Extrude",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-extrude.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-extrude.hero.webp"
   },
   {
    "id": "duplex.dd-taper",
    "name": "Taper",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-taper.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-taper.hero.webp"
   },
   {
    "id": "duplex.dd-text-on-curve",
    "name": "Text on Curve",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-text-on-curve.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-text-on-curve.hero.webp"
   },
   {
    "id": "duplex.dd-bubble-lens",
    "name": "Bubble Lens",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/distort-3d-text/thumbs/dd-bubble-lens.webp",
+   "hero": "effects/distort-3d-text/thumbs/dd-bubble-lens.hero.webp"
   }
  ]
 }

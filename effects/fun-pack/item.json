@@ -17,12 +17,16 @@
   {
    "id": "absentmotion.jelly-wobble",
    "name": "Jelly Wobble",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/fun-pack/thumbs/jelly-wobble.webp",
+   "hero": "effects/fun-pack/thumbs/jelly-wobble.hero.webp"
   },
   {
    "id": "absentmotion.candy-glow",
    "name": "Candy Glow",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/fun-pack/thumbs/candy-glow.webp",
+   "hero": "effects/fun-pack/thumbs/candy-glow.hero.webp"
   }
  ]
 }

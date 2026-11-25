@@ -17,97 +17,135 @@
   {
    "id": "duplex.dd-dissolve",
    "name": "Dissolve",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-dissolve.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-dissolve.hero.webp"
   },
   {
    "id": "duplex.dd-shatter",
    "name": "Shatter",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-shatter.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-shatter.hero.webp"
   },
   {
    "id": "duplex.dd-shatter-text",
    "name": "Text Shatter",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-shatter-text.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-shatter-text.hero.webp"
   },
   {
    "id": "duplex.dd-text-explode",
    "name": "Text Explosion",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-text-explode.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-text-explode.hero.webp"
   },
   {
    "id": "duplex.dd-tv-off",
    "name": "TV Switch-Off",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-tv-off.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-tv-off.hero.webp"
   },
   {
    "id": "duplex.dd-dust-dissolve",
    "name": "Dust Dissolve",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-dust-dissolve.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-dust-dissolve.hero.webp"
   },
   {
    "id": "duplex.dd-burn-wipe",
    "name": "Burn Wipe",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-burn-wipe.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-burn-wipe.hero.webp"
   },
   {
    "id": "duplex.dd-dust-wipe",
    "name": "Dust Wipe",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-dust-wipe.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-dust-wipe.hero.webp"
   },
   {
    "id": "duplex.dd-glitch",
    "name": "Glitch",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-glitch.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-glitch.hero.webp"
   },
   {
    "id": "duplex.dd-glitch-styles",
    "name": "Glitch Styles",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-glitch-styles.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-glitch-styles.hero.webp"
   },
   {
    "id": "duplex.dd-pixel-wipe",
    "name": "Pixel Wipe",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-pixel-wipe.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-pixel-wipe.hero.webp"
   },
   {
    "id": "duplex.dd-halftone-wipe",
    "name": "Halftone Transition",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-halftone-wipe.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-halftone-wipe.hero.webp"
   },
   {
    "id": "duplex.dd-scatter-transition",
    "name": "Scatter Transition",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-scatter-transition.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-scatter-transition.hero.webp"
   },
   {
    "id": "duplex.dd-tv-glitch",
    "name": "TV Glitch",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-tv-glitch.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-tv-glitch.hero.webp"
   },
   {
    "id": "duplex.dd-card-flip-grid",
    "name": "Card Flip Grid",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-card-flip-grid.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-card-flip-grid.hero.webp"
   },
   {
    "id": "duplex.dd-sand-disintegrate",
    "name": "Sand Disintegrate",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-sand-disintegrate.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-sand-disintegrate.hero.webp"
   },
   {
    "id": "duplex.dd-ember-disintegrate",
    "name": "Ember Disintegrate",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-ember-disintegrate.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-ember-disintegrate.hero.webp"
   },
   {
    "id": "duplex.dd-smoke-dissolve",
    "name": "Smoke Dissolve",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-smoke-dissolve.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-smoke-dissolve.hero.webp"
   },
   {
    "id": "duplex.dd-outline-draw",
    "name": "Outline Draw",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/transitions-dissolves-glitch/thumbs/dd-outline-draw.webp",
+   "hero": "effects/transitions-dissolves-glitch/thumbs/dd-outline-draw.hero.webp"
   }
  ]
 }

@@ -17,102 +17,142 @@
   {
    "id": "duplex.dd-black-bars",
    "name": "Black Bars",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-black-bars.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-black-bars.hero.webp"
   },
   {
    "id": "duplex.dd-tracking-boxes",
    "name": "Tracking Boxes",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-tracking-boxes.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-tracking-boxes.hero.webp"
   },
   {
    "id": "duplex.dd-palette-cycle",
    "name": "Palette Cycle",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-palette-cycle.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-palette-cycle.hero.webp"
   },
   {
    "id": "duplex.dd-gaussian-splatting",
    "name": "Soft Blob Mosaic",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-gaussian-splatting.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-gaussian-splatting.hero.webp"
   },
   {
    "id": "duplex.dd-photo-grade",
    "name": "Photo Grade",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-photo-grade.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-photo-grade.hero.webp"
   },
   {
    "id": "duplex.dd-low-quality",
    "name": "Low Quality Video",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-low-quality.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-low-quality.hero.webp"
   },
   {
    "id": "duplex.dd-papercut",
    "name": "Paper Cutout",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-papercut.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-papercut.hero.webp"
   },
   {
    "id": "duplex.dd-low-poly",
    "name": "Low Poly Trace",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-low-poly.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-low-poly.hero.webp"
   },
   {
    "id": "duplex.dd-rainbow-stripes",
    "name": "Rainbow Stripes",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-rainbow-stripes.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-rainbow-stripes.hero.webp"
   },
   {
    "id": "duplex.dd-sharpen",
    "name": "Sharpen",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-sharpen.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-sharpen.hero.webp"
   },
   {
    "id": "duplex.dd-knockout-look",
    "name": "Knockout Look",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-knockout-look.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-knockout-look.hero.webp"
   },
   {
    "id": "duplex.dd-chroma-center-key",
    "name": "Chroma and Center Key",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-chroma-center-key.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-chroma-center-key.hero.webp"
   },
   {
    "id": "duplex.dd-chroma-luma-key",
    "name": "Chroma and Luma Key",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-chroma-luma-key.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-chroma-luma-key.hero.webp"
   },
   {
    "id": "duplex.dd-body-cutout",
    "name": "Oval Spotlight Outline",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-body-cutout.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-body-cutout.hero.webp"
   },
   {
    "id": "duplex.dd-code-grade",
    "name": "Code Color Grade",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-code-grade.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-code-grade.hero.webp"
   },
   {
    "id": "duplex.dd-film-look",
    "name": "Film Look",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-film-look.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-film-look.hero.webp"
   },
   {
    "id": "duplex.dd-teal-orange",
    "name": "Teal and Orange",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-teal-orange.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-teal-orange.hero.webp"
   },
   {
    "id": "duplex.dd-color-cycle",
    "name": "Color Cycle",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-color-cycle.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-color-cycle.hero.webp"
   },
   {
    "id": "duplex.dd-3color-gradient",
    "name": "Three Color Gradient",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-3color-gradient.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-3color-gradient.hero.webp"
   },
   {
    "id": "duplex.dd-solid-color",
    "name": "Color Fill",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/color-looks-keying/thumbs/dd-solid-color.webp",
+   "hero": "effects/color-looks-keying/thumbs/dd-solid-color.hero.webp"
   }
  ]
 }

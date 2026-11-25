@@ -18,87 +18,121 @@
   {
    "id": "duplex.dd-aurora",
    "name": "Aurora",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-aurora.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-aurora.hero.webp"
   },
   {
    "id": "duplex.dd-gold-glow",
    "name": "Gold Glow",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-gold-glow.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-gold-glow.hero.webp"
   },
   {
    "id": "duplex.dd-fire-embers",
    "name": "Fire and Embers",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-fire-embers.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-fire-embers.hero.webp"
   },
   {
    "id": "duplex.dd-starfield",
    "name": "Starfield",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-starfield.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-starfield.hero.webp"
   },
   {
    "id": "duplex.dd-eye-glow",
    "name": "Eye Glow",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-eye-glow.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-eye-glow.hero.webp"
   },
   {
    "id": "duplex.dd-light-sweep",
    "name": "Light Sweep",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-light-sweep.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-light-sweep.hero.webp"
   },
   {
    "id": "duplex.dd-flame-aura",
    "name": "Flame Aura",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-flame-aura.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-flame-aura.hero.webp"
   },
   {
    "id": "duplex.dd-radial-blur",
    "name": "Radial Blur",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-radial-blur.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-radial-blur.hero.webp"
   },
   {
    "id": "duplex.dd-ray-blur",
    "name": "Ray Blur",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-ray-blur.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-ray-blur.hero.webp"
   },
   {
    "id": "duplex.dd-light-rays",
    "name": "Light Rays",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-light-rays.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-light-rays.hero.webp"
   },
   {
    "id": "duplex.dd-glow-rings",
    "name": "Glow Rings",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-glow-rings.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-glow-rings.hero.webp"
   },
   {
    "id": "duplex.dd-prism-glow",
    "name": "Prism Glow",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-prism-glow.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-prism-glow.hero.webp"
   },
   {
    "id": "duplex.dd-bright-ray-glow",
    "name": "Bright Ray Glow",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-bright-ray-glow.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-bright-ray-glow.hero.webp"
   },
   {
    "id": "duplex.dd-dark-glow",
    "name": "Dark Glow",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-dark-glow.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-dark-glow.hero.webp"
   },
   {
    "id": "duplex.dd-soap-bubbles",
    "name": "Soap Bubbles",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-soap-bubbles.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-soap-bubbles.hero.webp"
   },
   {
    "id": "duplex.dd-electric-arc",
    "name": "Electric Arc",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-electric-arc.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-electric-arc.hero.webp"
   },
   {
    "id": "duplex.dd-soft-glow",
    "name": "Soft Glow",
-   "version": 1
+   "version": 1,
+   "thumbnail": "effects/glow-light-fire/thumbs/dd-soft-glow.webp",
+   "hero": "effects/glow-light-fire/thumbs/dd-soft-glow.hero.webp"
   }
  ]
 }

@@ -30,6 +30,7 @@ Only the maintainer adds items to this repository. Everything is checked by a pe
 - Bundles must be 20 MB or smaller.
 - Preset bundles must be 20 MB or smaller. Older `.xml` presets must be 1 MB or smaller.
 - Effect files (`.json` or `.abmfx` packs) must be 512 KB or smaller. No effects taken or converted from another app's files.
+- Every effect needs a small and a large thumbnail (see [Pictures](#pictures)). An effect without both is not added.
 - Edits can use clips from shows, anime, films and music videos. If you share someone else's edit, project, preset or art, credit them in the description. Paid assets are not allowed.
 - If something you made was shared here and you want it taken down, contact **comett1225** on Discord.
 - Items are shared under CC BY 4.0 per [LICENSE-ITEMS.md](LICENSE-ITEMS.md). Clips from shows, anime and films in an edit stay with their owners and are not part of that licence.
@@ -40,7 +41,14 @@ Every picture in the Community tab shows the item itself.
 
 - A bundle's picture is a frame of its own project. The creator picks the moment and the square when exporting the Community bundle, and `scripts/community.py` copies that picture out of the bundle.
 - A preset has no picture file. The app draws the preset itself on its placeholder and shows its most visible moment.
-- An effect has no picture file either. The app draws the effect on a sample picture.
+- Every effect has two pictures of its own in the item's `thumbs` folder, named after the effect's `id`:
+
+| File | Shown | Size | Kind | At most |
+| --- | --- | --- | --- | --- |
+| `<id>.webp` | in lists and on tiles | 192 × 192 | WebP, still or animated (up to 3 seconds and 90 frames) | 150 KB |
+| `<id>.hero.webp` | at the top of the effect's page | 720 × 720 | WebP, still | 150 KB |
+
+  `scripts/community.py` refuses an effect whose pictures are missing, the wrong size or kind, or too big.
 
 ## Layout
 
@@ -59,6 +67,8 @@ presets/<name>/item.json        preset details
 effects/README.md               how to make and share effects
 effects/<name>/<name>.json      one effect (at most 512 KB)
 effects/<name>/<name>.abmfx      effect pack, a ZIP of .json effects (at most 512 KB)
+effects/<name>/thumbs/<id>.webp       small effect thumbnail (192 x 192, at most 150 KB)
+effects/<name>/thumbs/<id>.hero.webp  large effect thumbnail (720 x 720, at most 150 KB)
 effects/<name>/item.json        effect details
 scripts/community.py            maintainer script
 .github/workflows/check.yml     CI workflow
@@ -73,7 +83,7 @@ python3 scripts/community.py check
 python3 scripts/community.py selftest
 ```
 
-- `add` adds `.absproj` files or `.xml` presets and updates `index.json`. A project bundle goes in `bundles/` and a preset bundle in `presets/`. A preset bundle must have one layer in a preset scene and no picture. `.xml` presets also accept `--creator`, `--description`, and `--tags`; preset bundles carry their own details. `.abmfx` and `.json` effects go in `effects/`; they take `--creator` (default: the effect's author), `--description`, `--tags`, and `--title` (needed for a pack whose file name is not a good title).
+- `add` adds `.absproj` files or `.xml` presets and updates `index.json`. A project bundle goes in `bundles/` and a preset bundle in `presets/`. A preset bundle must have one layer in a preset scene and no picture. `.xml` presets also accept `--creator`, `--description`, and `--tags`; preset bundles carry their own details. `.abmfx` and `.json` effects go in `effects/`; they need `--thumbs` (a folder holding `<id>.webp` and `<id>.hero.webp` for every effect) and take `--creator` (default: the effect's author), `--description`, `--tags`, and `--title` (needed for a pack whose file name is not a good title). To render thumbnails from an effect file, use `tools/community_thumbs.py` in the AbsentMotion repository.
 - `index` rebuilds `index.json` from every `item.json`.
-- `check` verifies files, sizes, SHA-256 hashes, paths, limits, READMEs, and `index.json`, checks that every preset has one layer, re-checks every effect file (ids, names, settings, shader size and pack limits), and rejects a preset or effect folder with a `thumb.webp` or a `thumbnail` in its `item.json`.
+- `check` verifies files, sizes, SHA-256 hashes, paths, limits, READMEs, and `index.json`, checks that every preset has one layer, re-checks every effect file (ids, names, settings, shader size and pack limits) and every effect's two thumbnails, and rejects a preset folder with a `thumb.webp` or a `thumbnail` in its `item.json`.
 - `selftest` runs built-in tests in temporary folders.
