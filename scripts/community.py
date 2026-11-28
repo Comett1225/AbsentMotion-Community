@@ -18,6 +18,8 @@ EFFECT_LIMIT = 512 * 1024
 EFFECT_SKSL_LIMIT = 64 * 1024
 EFFECT_PARAM_LIMIT = 32
 EFFECT_PACK_LIMIT = 20
+OFFICIAL_EFFECT_LIMIT = 8 * 1024 * 1024
+OFFICIAL_PACK_LIMIT = 500
 EFFECT_THUMB_SIDE = 192
 EFFECT_HERO_SIDE = 720
 EFFECT_THUMB_LIMIT = 150 * 1024
@@ -101,6 +103,7 @@ INDEX_FIELDS = (
     "minVersion",
     "credit",
     "contents",
+    "official",
 )
 
 REPO_PATH_PATTERN = re.compile(r"^[A-Za-z0-9._/-]+$")
@@ -431,12 +434,14 @@ def check_effect(source, effect):
     return effect
 
 
-def read_effects(path):
+def read_effects(path, official=False):
+    byte_limit = OFFICIAL_EFFECT_LIMIT if official else EFFECT_LIMIT
+    pack_limit = OFFICIAL_PACK_LIMIT if official else EFFECT_PACK_LIMIT
     if not path.is_file():
         raise Rejected(f"{path} is not a file")
     size = path.stat().st_size
-    if size > EFFECT_LIMIT:
-        raise Rejected(f"{path.name} is {size / 1024:.0f} KB; the limit is 512 KB")
+    if size > byte_limit:
+        raise Rejected(f"{path.name} is {size / 1024:.0f} KB; the limit is {byte_limit // 1024} KB")
     raw_bytes = path.read_bytes()
     suffix = path.suffix.lower()
     effects = []
@@ -449,12 +454,12 @@ def read_effects(path):
         try:
             with zipfile.ZipFile(path) as pack:
                 entries = [info for info in pack.infolist() if not info.is_dir() and "/" not in info.filename and info.filename.lower().endswith(".json")]
-                if len(pack.infolist()) > ENTRY_COUNT_LIMIT or sum(info.file_size for info in entries) > 4 * EFFECT_LIMIT:
+                if len(pack.infolist()) > max(ENTRY_COUNT_LIMIT, pack_limit + 1) or sum(info.file_size for info in entries) > 4 * byte_limit:
                     raise Rejected(f"{path.name} unpacks too large")
                 if not entries:
                     raise Rejected(f"{path.name} has no effect .json files at its top level")
-                if len(entries) > EFFECT_PACK_LIMIT:
-                    raise Rejected(f"{path.name} has {len(entries)} effects; the limit is {EFFECT_PACK_LIMIT}")
+                if len(entries) > pack_limit:
+                    raise Rejected(f"{path.name} has {len(entries)} effects; the limit is {pack_limit}")
                 for info in entries:
                     try:
                         effects.append(check_effect(f"{path.name}/{info.filename}", json.loads(pack.read(info).decode("utf-8"))))
@@ -470,8 +475,8 @@ def read_effects(path):
     return effects, raw_bytes, size, hashlib.sha256(raw_bytes).hexdigest()
 
 
-def add_effect(path, root=ROOT, creator=None, description=None, tags=None, title=None, credit=None, thumbs=None):
-    effects, raw_bytes, size, sha256 = read_effects(path)
+def add_effect(path, root=ROOT, creator=None, description=None, tags=None, title=None, credit=None, thumbs=None, official=False):
+    effects, raw_bytes, size, sha256 = read_effects(path, official)
     if thumbs is None:
         raise Rejected(f"{path.name}: effects need thumbnails; pass --thumbs with a folder holding <id>.webp and <id>.hero.webp for every effect")
     check_effect_pictures(thumbs, effects)
@@ -526,6 +531,8 @@ def add_effect(path, root=ROOT, creator=None, description=None, tags=None, title
     if clean_credit:
         info["credit"] = clean_credit
     info["contents"] = effect_contents(effects, first.get("author"), f"effects/{name}/")
+    if official:
+        info["official"] = True
     (folder / "item.json").write_text(json.dumps(info, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     rebuild_index(root)
     return f"effects/{name}"
@@ -622,7 +629,7 @@ def add_preset(path, root=ROOT, creator=None, description=None, tags=None):
     return f"presets/{name}"
 
 
-def add_item(path, root=ROOT, creator=None, description=None, tags=None, title=None, credit=None, thumbs=None):
+def add_item(path, root=ROOT, creator=None, description=None, tags=None, title=None, credit=None, thumbs=None, official=False):
     suffix = path.suffix.lower()
     if suffix == ".absproj":
         if creator is not None or description is not None or tags is not None or title is not None or credit is not None or thumbs is not None:
@@ -633,7 +640,7 @@ def add_item(path, root=ROOT, creator=None, description=None, tags=None, title=N
             raise Rejected(f"{path.name}: --title, --credit and --thumbs only apply to effects")
         return add_preset(path, root, creator=creator, description=description, tags=tags)
     if suffix in (".abmfx", ".json"):
-        return add_effect(path, root, creator=creator, description=description, tags=tags, title=title, credit=credit, thumbs=thumbs)
+        return add_effect(path, root, creator=creator, description=description, tags=tags, title=title, credit=credit, thumbs=thumbs, official=official)
     raise Rejected(f"{path.name}: expected a .absproj bundle, an .xml preset, or an .abmfx or .json effect")
 
 
@@ -670,8 +677,15 @@ def render_index(root=ROOT):
     return json.dumps(build_index_data(root), indent=1, ensure_ascii=False) + "\n"
 
 
+def render_packs(index_text):
+    packs = {item["name"]: item["sha256"] for item in json.loads(index_text)["items"] if item.get("official") is True}
+    return json.dumps({"packs": packs}, separators=(",", ":"), sort_keys=True) + "\n"
+
+
 def rebuild_index(root=ROOT):
-    (root / "index.json").write_text(render_index(root), encoding="utf-8")
+    text = render_index(root)
+    (root / "index.json").write_text(text, encoding="utf-8")
+    (root / "packs.json").write_text(render_packs(text), encoding="utf-8")
 
 
 def check_item_metadata(info, expected_kind, folder_prefix, problems):
@@ -762,7 +776,7 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
 
     file_rel = info.get("file")
     preset_bundle = expected_kind == "preset" and isinstance(file_rel, str) and file_rel.endswith(".absproj")
-    limit = EFFECT_LIMIT if expected_kind == "effect" else PRESET_LIMIT if expected_kind == "preset" and not preset_bundle else BUNDLE_LIMIT
+    limit = (OFFICIAL_EFFECT_LIMIT if info.get("official") is True else EFFECT_LIMIT) if expected_kind == "effect" else PRESET_LIMIT if expected_kind == "preset" and not preset_bundle else BUNDLE_LIMIT
 
     recorded_bytes = info.get("bytes")
     if not is_non_bool_int(recorded_bytes) or recorded_bytes < 0:
@@ -820,7 +834,7 @@ def check_item_folder(root, kind_dir_name, expected_kind, folder, problems):
                     problems.append(f"{folder_prefix}: {rejected}")
             if expected_kind == "effect":
                 try:
-                    effects = read_effects(target_file)[0]
+                    effects = read_effects(target_file, info.get("official") is True)[0]
                     if info.get("contents") != effect_contents(effects, effects[0].get("author"), folder_prefix):
                         problems.append(f"{folder_prefix}item.json: contents must list every effect as creator.id with its name, version, thumbnail and hero")
                     effect_pictures = {picture for effect in effects for picture in effect_picture_names(effect["id"])}
@@ -922,6 +936,9 @@ def check_repo(root=ROOT):
             else:
                 if actual_index != expected_index:
                     problems.append("index.json does not match what 'index' would write")
+        packs_path = root / "packs.json"
+        if not packs_path.is_file() or packs_path.read_text(encoding="utf-8") != render_packs(expected_index):
+            problems.append("packs.json does not match what 'index' would write")
 
     return problems
 
@@ -1359,6 +1376,7 @@ def build_parser():
     add_parser.add_argument("--tags", help="comma-separated tags for .xml presets and effects (up to 8 tags, 30 characters each)")
     add_parser.add_argument("--title", help="title for an effect pack (a single effect uses its name)")
     add_parser.add_argument("--credit", help="credit line for an effect pack, for example 'Inspired by After Motion Z' (at most 120 characters)")
+    add_parser.add_argument("--official", action="store_true", help="an effect pack from the AbsentMotion team (up to 500 effects and 8 MB), shown at the top of More Effects in AbsentMotion 5.4 and later")
     add_parser.add_argument("--thumbs", type=Path, help="folder with every effect's thumbnails: <id>.webp (192x192) and <id>.hero.webp (720x720)")
 
     subparsers.add_parser("index", help="rebuild index.json from all item.json files")
@@ -1406,6 +1424,7 @@ def main():
                     title=args.title,
                     credit=args.credit,
                     thumbs=args.thumbs,
+                    official=args.official,
                 )
                 print(f"added {added_folder}")
             except Rejected as rejected:
